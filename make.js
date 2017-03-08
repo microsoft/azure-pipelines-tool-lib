@@ -1,0 +1,66 @@
+require('shelljs/make');
+var fs = require('fs');
+var path = require('path');
+
+// util functions
+var util = require('./make-util');
+var cd = util.cd;
+var cp = util.cp;
+var mkdir = util.mkdir;
+var rm = util.rm;
+var test = util.test;
+var run = util.run;
+var banner = util.banner;
+var rp = util.rp;
+var fail = util.fail;
+var ensureExists = util.ensureExists;
+var pathExists = util.pathExists;
+var addPath = util.addPath;
+var ensureTool = util.ensureTool;
+
+// add node modules .bin to the path so we can dictate version of tsc etc...
+var binPath = path.join(__dirname, 'node_modules', '.bin');
+if (!test('-d', binPath)) {
+    fail('node modules bin not found.  ensure npm install has been run.');
+}
+addPath(binPath);
+
+var buildPath = path.join(__dirname, '_build');
+var testPath = path.join(__dirname, '_test');
+
+target.clean = function() {
+    rm('-Rf', buildPath);
+    rm('-Rf', testPath);
+};
+
+target.build = function() {
+    target.clean();
+    target.loc();
+
+    run('tsc --version', true);
+    run('tsc --outDir ' + buildPath, true);
+    //cp(rp('typings.json'), buildPath);
+    cp(rp('package.json'), buildPath);
+    cp(rp('README.md'), buildPath);
+    cp(rp('LICENSE'), buildPath);
+    cp(rp('lib.json'), buildPath);
+    cp('-Rf', rp('Strings'), buildPath);
+    // just a bootstrap file to avoid /// in final js and .d.ts file
+    rm(path.join(buildPath, 'index.*'));
+}
+
+target.loc = function() {
+    var lib = require('./lib.json');
+    var strPath = path.join('Strings', 'resources.resjson', 'en-US')
+    mkdir('-p', strPath);
+    var strings = {};
+    if (lib.messages) {
+        for (var key in lib.messages) {
+            strings['loc.messages.' + key] = lib.messages[key];
+        }
+    }
+
+    // create the en-US resjson file.
+    var enContents = JSON.stringify(strings, null, 2);
+    fs.writeFileSync(path.join(strPath, 'resources.resjson'), enContents)
+}

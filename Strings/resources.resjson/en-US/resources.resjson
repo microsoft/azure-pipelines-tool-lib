@@ -1,0 +1,4 @@
+{
+  "loc.messages.LIB_UnhandledEx": "Unhandled: %s",
+  "loc.messages.LIB_FailOnCode": "Failure return code: %d"
+}

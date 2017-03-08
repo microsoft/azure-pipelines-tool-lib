@@ -1,0 +1,6 @@
+{
+    "messages": {
+        "LIB_UnhandledEx": "Unhandled: %s",
+        "LIB_FailOnCode": "Failure return code: %d"
+    }
+}
