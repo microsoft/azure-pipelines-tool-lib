@@ -14,7 +14,8 @@ async function testNode(rangeInput: string) {
     }
     else {
         // let's query for version
-        // If your tool doesn't offer a mechanism to query, then it can only support exact version inputs
+        // If your tool doesn't offer a mechanism to query, 
+        // then it can only support exact version inputs
 
         let re: RegExp = /v(\d+\.)(\d+\.)(\d+)/g;
         let versions: string[] = await installer.scrape('https://nodejs.org/dist/', re);
@@ -29,15 +30,17 @@ async function testNode(rangeInput: string) {
     if (!toolPath) {
         // not installed
         console.log('download ' + version);
+
+        // a tool installer intimately knows how to get that tools (and construct urls)
         let plat: string = os.platform();
         let ext: string = plat == 'win32'? 'node-v' + version + '-win-' + os.arch() + '.7z':
                                             'node-v' + version + '-' + plat + '-' + os.arch() + '.tar.gz';  
         let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + ext; 
 
         // a real task would not pass file name as it would generate in temp (better)
-        await installer.downloadTool(downloadUrl, ext);
-
-        
+        let downloadPath: string = await installer.downloadTool(downloadUrl, ext);
+        installer.extractTar(downloadPath, 'node', version);
+        toolPath = downloadPath;
     }
 
     installer.prependPath(toolPath);
@@ -48,7 +51,7 @@ async function run() {
     try {
         await testNode('4.7.0');
         await testNode('4.x');
-        await testNode('9.x || >=4.7.0');
+        // await testNode('9.x || >=4.7.0');
     }
     catch (error) {
         console.error('ERR:' + error.message);

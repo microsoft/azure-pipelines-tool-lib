@@ -7,6 +7,8 @@ import * as os from 'os';
 import * as process from 'process';
 import * as fs from 'fs';
 import * as semver from 'semver';
+import * as tl from 'vsts-task-lib/task';
+import * as trm from 'vsts-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
 
@@ -82,13 +84,12 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
                 let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
                 debug('downloading');
                 let stream = (await http.get(url)).message.pipe(file);
+
                 stream.on('finish', () => {
                     //stream.pipe(file);
                     debug('download complete');
                     resolve(destPath);
-                });                
-                //stream.pipe(file);
-
+                });
             }
         }
         catch (error) {
@@ -98,6 +99,44 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
     });
 }
 
+//
+// Extract Functions
+//
+export interface IExtractOptions {
+    keepRootFolder: boolean;
+}
+
+export async function extractTar(file: string, 
+                                 tool: string, 
+                                 version: string, 
+                                 arch?: string,
+                                 options?: IExtractOptions) {
+
+    options = options || <IExtractOptions>{};
+    options = <IExtractOptions>{};
+    options.keepRootFolder = options.keepRootFolder || false;
+
+    // mkdir -p node/4.7.0/x64
+    // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
+    
+    debug('extracting tar');
+    arch = arch || os.arch();
+    let dest = path.join(_getCacheRoot(), tool, version, arch);
+    debug('destination', dest);
+    tl.mkdirP(dest);
+
+    let tr:trm.ToolRunner = tl.tool('tar');
+    tr.arg(['xzC', dest, '-f', file]);
+    if (!options.keepRootFolder) {
+        tr.arg(['--strip-components', '1']);
+    }
+    
+    await tr.exec();
+}
+
+//---------------------
+// Query Functions
+//
 export async function scrape(url: string, regex: RegExp): Promise<string[]> {
     let output: string = await (await http.get(url)).readBody();
 

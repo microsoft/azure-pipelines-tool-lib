@@ -1,12 +1,13 @@
 #!/bin/bash 
 
+# build
+npm run build
+pushd _build
+
+# agent (or user will override) the tools cache dir
 export SYSTEM_TOOLCACHE=./CACHE
-
-echo $SYSTEM_TOOLCACHE
-
-rm -rf $SYSTEM_TOOLCACHE
 mkdir -p $SYSTEM_TOOLCACHE
 
-tsc
-
+# run the sample
 node sample.js
+popd
