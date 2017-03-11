@@ -1,5 +1,6 @@
 _build
 _test
+.taskkey
 
 # Logs
 logs

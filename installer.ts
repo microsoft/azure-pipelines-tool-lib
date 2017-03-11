@@ -68,6 +68,10 @@ export function evaluateVersions(versions: string[], versionRange: string): stri
     return version;
 }
 
+//
+// TODO: support 302 redirect
+// TODO: keep extension intact
+//
 export async function downloadTool(url: string, fileName?:string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
@@ -78,19 +82,25 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
             debug('downloading', url);
             debug('destination', destPath);
 
+            if (fs.existsSync(destPath)) {
+                throw new Error("Destination file path already exists");
+            }
+
             // TODO: retries
-            if (!fs.existsSync(destPath)) {
-                debug('creating stream');
-                let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
+            debug('creating stream');
+            let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
+            file.on('open', async(fd) => {
                 debug('downloading');
                 let stream = (await http.get(url)).message.pipe(file);
 
                 stream.on('finish', () => {
-                    //stream.pipe(file);
                     debug('download complete');
                     resolve(destPath);
                 });
-            }
+            });
+            file.on('error', (err) => {
+                reject(err);
+            })
         }
         catch (error) {
             console.log('ERR!');
@@ -106,6 +116,8 @@ export interface IExtractOptions {
     keepRootFolder: boolean;
 }
 
+// TODO: extract function that does right thing by extension.
+//       make download keep the extension intact.
 export async function extractTar(file: string, 
                                  tool: string, 
                                  version: string, 
@@ -136,7 +148,13 @@ export async function extractTar(file: string,
 
 //---------------------
 // Query Functions
-//
+//---------------------
+
+// TODO: function to query local store first.
+//       default input will be >= LTS version.  drop label different than value.
+//       v4 (LTS) would have a value of 4.x
+//       option to always download?  (not cache), TTL?
+
 export async function scrape(url: string, regex: RegExp): Promise<string[]> {
     let output: string = await (await http.get(url)).readBody();
 
@@ -159,13 +177,13 @@ export async function scrape(url: string, regex: RegExp): Promise<string[]> {
 // privates
 function _getTempPath(): string {
     // TODO: does agent now set TEMP?  Is there a common var.
-    return path.join(__dirname, _getCacheRoot());
+    return _getCacheRoot();
 }
 
 function _getCacheRoot(): string {
     let cacheRoot = process.env['SYSTEM_TOOLCACHE'];
     if (!cacheRoot) {
-        throw new Error('System.ToolCache');
+        throw new Error('System.ToolCache not set.  Should have been set by the agent.  Try updating your agent.');
     }
     return cacheRoot;
 }

@@ -64,3 +64,12 @@ target.loc = function() {
     var enContents = JSON.stringify(strings, null, 2);
     fs.writeFileSync(path.join(strPath, 'resources.resjson'), enContents)
 }
+
+target.test = function() {
+    target.build();
+
+    run('tsc -p ./test --outDir ' + testPath, true);
+    //cp('-Rf', rp('test/scripts'), testPath);
+    process.env['TASKLIB_INPROC_UNITS'] = '1'; // export task-lib internals for internal unit testing
+    run('mocha ' + testPath + ' --recursive', true);
+}

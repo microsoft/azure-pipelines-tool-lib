@@ -28,6 +28,7 @@
     "vsts-task-lib": "^1.1.0"
   },
   "devDependencies": {
+    "mocha": "^3.2.0",
     "shelljs": "^0.7.6",
     "typescript": "^2.2.1"
   }
