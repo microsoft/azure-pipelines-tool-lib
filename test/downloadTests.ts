@@ -1,5 +1,5 @@
 /// <reference path="../typings/index.d.ts" />
-/// <reference path="../_build/installer.d.ts" />
+/// <reference path="../_build/tool.d.ts" />
 
 import assert = require('assert');
 import path = require('path');
@@ -7,7 +7,7 @@ import fs = require('fs');
 import shell = require('shelljs');
 import os = require('os');
 import * as tl from 'vsts-task-lib/task';
-import * as installer from '../_build/installer';
+import * as toolLib from '../_build/tool';
 
 //import * as testutil from './testutil';
 
@@ -17,7 +17,7 @@ describe('Download Tests', function () {
             let cachePath = path.join(__dirname, 'CACHE');
             tl.mkdirP(cachePath);
             process.env['SYSTEM_TOOLCACHE'] = cachePath;
-            installer.debug('initializing tests');
+            toolLib.debug('initializing tests');
         }
         catch (err) {
             assert.fail('cannnot init', 'init', 'Failed to initialize: ' + err.message, 'init');
@@ -34,8 +34,8 @@ describe('Download Tests', function () {
 
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let downPath: string = await installer.downloadTool("http://httpbin.org/bytes/100");
-                installer.debug('downloaded path:', downPath);
+                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                toolLib.debug('downloaded path:', downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 

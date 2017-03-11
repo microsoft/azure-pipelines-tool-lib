@@ -1,35 +1,35 @@
 {
-  "name": "vsts-task-tool-lib",
-  "version": "0.1.0",
-  "description": "VSTS Tool Installer Lib for CI/CD Tasks",
-  "main": "installer.js",
-  "scripts": {
-    "build": "node make.js build",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/microsoft/vsts-task-installer-lib.git"
-  },
-  "keywords": [
-    "VSTS"
-  ],
-  "author": "Microsoft",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/microsoft/vsts-task-installer-lib/issues"
-  },
-  "homepage": "https://github.com/microsoft/vsts-task-installer-lib#readme",
-  "dependencies": {
-    "semver": "^5.3.0",
-    "semver-compare": "^1.0.0",
-    "typed-rest-client": "^0.9.0",
-    "uuid": "^3.0.1",
-    "vsts-task-lib": "^1.1.0"
-  },
-  "devDependencies": {
-    "mocha": "^3.2.0",
-    "shelljs": "^0.7.6",
-    "typescript": "^2.2.1"
-  }
+    "name": "vsts-task-tool-lib",
+    "version": "0.1.0",
+    "description": "VSTS Tool Installer Lib for CI/CD Tasks",
+    "main": "tool.js",
+    "scripts": {
+        "build": "node make.js build",
+        "test": "node make.js test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/microsoft/vsts-task-installer-lib.git"
+    },
+    "keywords": [
+        "VSTS"
+    ],
+    "author": "Microsoft",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/microsoft/vsts-task-installer-lib/issues"
+    },
+    "homepage": "https://github.com/microsoft/vsts-task-installer-lib#readme",
+    "dependencies": {
+        "semver": "^5.3.0",
+        "semver-compare": "^1.0.0",
+        "typed-rest-client": "^0.9.0",
+        "uuid": "^3.0.1",
+        "vsts-task-lib": "^1.1.0"
+    },
+    "devDependencies": {
+        "mocha": "^3.2.0",
+        "shelljs": "^0.7.6",
+        "typescript": "^2.2.1"
+    }
 }

@@ -1,6 +1,6 @@
 ///<reference path="typings/index.d.ts"/>
 
-//import * as restm from 'typed-rest-client/RestClient';
+import * as restm from 'typed-rest-client/RestClient';
 import * as httpm from 'typed-rest-client/HttpClient';
 import * as path from 'path';
 import * as os from 'os';
@@ -11,6 +11,8 @@ import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
+
+exports.rest = restm;
 
 let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;

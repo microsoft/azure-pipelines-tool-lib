@@ -8,6 +8,24 @@ Reference examples of our in the box tasks [are here](https://github.com/Microso
 
 In development.  Preview installer tasks soon.
 
+# Build
+
+Once:  
+```bash
+$ npm install
+```
+
+Build:  
+```bash
+$ npm run build
+```
+
+# Test
+
+```bash
+$ npm test
+```
+
 # Contributing
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

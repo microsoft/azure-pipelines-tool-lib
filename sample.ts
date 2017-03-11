@@ -1,4 +1,4 @@
-import * as installer from './installer';
+import * as toolLib from './tool';
 import * as os from 'os';
 
 async function testNode(rangeInput: string) {
@@ -8,25 +8,31 @@ async function testNode(rangeInput: string) {
     console.log('--------------------------');
 
     let version: string = rangeInput;
-    if (installer.isExplicitVersion(rangeInput)) {
+    if (toolLib.isExplicitVersion(rangeInput)) {
         // given exact version to get
-        installer.debug('explicit match', rangeInput);
+        toolLib.debug('explicit match', rangeInput);
     }
     else {
         // let's query for version
         // If your tool doesn't offer a mechanism to query, 
         // then it can only support exact version inputs
 
+        // hopefully your tool supports an easy way to get a version list.
+        let dataUrl = "https://nodejs.org/dist/index.json";
+        
+        // but if there's a download page, a last option is to scrape with a regex
+        let scrapeUrl = 'https://nodejs.org/dist/';
         let re: RegExp = /v(\d+\.)(\d+\.)(\d+)/g;
-        let versions: string[] = await installer.scrape('https://nodejs.org/dist/', re);
-        version = installer.evaluateVersions(versions, rangeInput);
+        let versions: string[] = await toolLib.scrape(scrapeUrl, re);
+
+        version = toolLib.evaluateVersions(versions, rangeInput);
         if (!version) {
             throw new Error('Could not satisfy version range ' + rangeInput);
         }
     }
     
 
-    let toolPath: string = installer.installedPath('node', version);
+    let toolPath: string = toolLib.installedPath('node', version);
     if (!toolPath) {
         // not installed
         console.log('download ' + version);
@@ -38,12 +44,12 @@ async function testNode(rangeInput: string) {
         let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + ext; 
 
         // a real task would not pass file name as it would generate in temp (better)
-        let downloadPath: string = await installer.downloadTool(downloadUrl, ext);
-        installer.extractTar(downloadPath, 'node', version);
+        let downloadPath: string = await toolLib.downloadTool(downloadUrl, ext);
+        toolLib.extractTar(downloadPath, 'node', version);
         toolPath = downloadPath;
     }
 
-    installer.prependPath(toolPath);
+    toolLib.prependPath(toolPath);
     console.log();
 }
 
