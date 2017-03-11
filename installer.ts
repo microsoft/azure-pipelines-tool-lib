@@ -163,9 +163,9 @@ function _getTempPath(): string {
 }
 
 function _getCacheRoot(): string {
-    let cacheRoot = process.env['SYSTEM_TOOLCACHE'];
+    let cacheRoot = process.env['AGENT_TOOLCACHE'];
     if (!cacheRoot) {
-        throw new Error('System.ToolCache');
+        throw new Error('Agent.ToolCache');
     }
     return cacheRoot;
 }
