@@ -10,7 +10,7 @@ In development.  Preview installer tasks soon.
 
 # Sample
 
-Sample of tool api usage is [here](samples.ts)
+Sample of tool api usage is [here](sample.ts)
 
 # Build
 
