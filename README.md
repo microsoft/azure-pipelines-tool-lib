@@ -8,6 +8,10 @@ Reference examples of our in the box tasks [are here](https://github.com/Microso
 
 In development.  Preview installer tasks soon.
 
+# Sample
+
+Sample of tool api usage is [here](samples.ts)
+
 # Build
 
 Once:  
