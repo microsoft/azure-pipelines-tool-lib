@@ -1,33 +1,97 @@
 import * as toolLib from './tool';
+import * as restm from 'typed-rest-client/RestClient';
 import * as os from 'os';
+import * as path from 'path';
 
-async function testNode(rangeInput: string) {
+async function run() {
+    try {
+        // explicit version
+        await getNode('4.7.0', false);
+
+        // query, filter and only LTS
+        await getNode('4.x', true);
+
+        // complex versionSpecs supported
+        // await getNode('9.x || >=4.7.0', true);
+    }
+    catch (error) {
+        console.error('ERR:' + error.message);
+    }
+
+}
+
+//
+// Node versions interface
+// see https://nodejs.org/dist/index.json
+//
+interface INodeVersion {
+    version: string,
+    lts: any,
+    files: string[]
+}
+
+let osPlat: string = os.platform();
+let osArch: string = os.arch();
+
+async function getNode(versionSpec: string, onlyLTS: boolean) {
     console.log();
     console.log('--------------------------');
-    console.log(rangeInput);
+    console.log(versionSpec);
     console.log('--------------------------');
 
-    let version: string = rangeInput;
-    if (toolLib.isExplicitVersion(rangeInput)) {
+    let version: string = versionSpec;
+    if (toolLib.isExplicitVersion(versionSpec)) {
         // given exact version to get
-        toolLib.debug('explicit match', rangeInput);
+        toolLib.debug('explicit match', versionSpec);
     }
     else {
         // let's query for version
         // If your tool doesn't offer a mechanism to query, 
         // then it can only support exact version inputs
+        let versions: string[] = [];
 
         // hopefully your tool supports an easy way to get a version list.
+        // node offers a json list of versions
+        let dataFileName: string;
+        switch (osPlat) {
+            case "linux": dataFileName = "linux-" + osArch; break;
+            case "darwin": dataFileName = "osx-" + osArch + '-tar'; break;
+            case "win32": dataFileName = "win-" + osArch; break;
+        }
+
         let dataUrl = "https://nodejs.org/dist/index.json";
-        
-        // but if there's a download page, a last option is to scrape with a regex
+        let ltsMap : {[version: string]: string} = {};
+        let rest: restm.RestClient = new restm.RestClient('tool-sample');
+        let nodeVersions: INodeVersion[] = (await rest.get<INodeVersion[]>(dataUrl)).result;
+        nodeVersions.forEach((nodeVersion:INodeVersion) => {
+            // ensure this version supports your os and platform
+            let compatible: boolean = nodeVersion.files.indexOf(dataFileName) >= 0;
+
+            if (compatible) {
+                if (!onlyLTS || (nodeVersion.lts && onlyLTS)) {
+                    versions.push(nodeVersion.version);
+                }
+                
+                if (nodeVersion.lts) {
+                    ltsMap[nodeVersion.version] = nodeVersion.lts;
+                }
+            }
+        });
+        version = toolLib.evaluateVersions(versions, versionSpec);
+        toolLib.debug('version from index.json', version);
+        toolLib.debug('isLTS:' + ltsMap[version]);
+
+        //
+        // If there is no data driven way to get versions supported,
+        // a last option is to tool.scrape() with a regex
+        //
         let scrapeUrl = 'https://nodejs.org/dist/';
         let re: RegExp = /v(\d+\.)(\d+\.)(\d+)/g;
-        let versions: string[] = await toolLib.scrape(scrapeUrl, re);
+        versions = await toolLib.scrape(scrapeUrl, re);
 
-        version = toolLib.evaluateVersions(versions, rangeInput);
+        version = toolLib.evaluateVersions(versions, versionSpec);
         if (!version) {
-            throw new Error('Could not satisfy version range ' + rangeInput);
+            throw new Error('Could not satisfy version range ' + versionSpec);
         }
     }
     
@@ -35,34 +99,26 @@ async function testNode(rangeInput: string) {
     let toolPath: string = toolLib.installedPath('node', version);
     if (!toolPath) {
         // not installed
-        console.log('download ' + version);
+        toolLib.debug('download ' + version);
 
         // a tool installer intimately knows how to get that tools (and construct urls)
-        let plat: string = os.platform();
-        let ext: string = plat == 'win32'? 'node-v' + version + '-win-' + os.arch() + '.7z':
-                                            'node-v' + version + '-' + plat + '-' + os.arch() + '.tar.gz';  
-        let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + ext; 
+        let urlFileName: string = osPlat == 'win32'? 'node-v' + version + '-win-' + os.arch() + '.7z':
+                                            'node-v' + version + '-' + osPlat + '-' + os.arch() + '.tar.gz';  
+        let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + urlFileName; 
 
         // a real task would not pass file name as it would generate in temp (better)
-        let downloadPath: string = await toolLib.downloadTool(downloadUrl, ext);
+        let downloadPath: string = await toolLib.downloadTool(downloadUrl, urlFileName);
         toolLib.extractTar(downloadPath, 'node', version);
-        toolPath = downloadPath;
+        
+        // a tool installer initimately knows details about the layout of that tool
+        // for example, node binary is in the bin folder after the extract.
+        // layouts could change by version, by platform etc... but that's the tool installers job
+        toolPath = toolLib.installedPath('node', version);
+        toolPath = path.join(toolPath, 'bin');
     }
 
     toolLib.prependPath(toolPath);
     console.log();
-}
-
-async function run() {
-    try {
-        await testNode('4.7.0');
-        await testNode('4.x');
-        // await testNode('9.x || >=4.7.0');
-    }
-    catch (error) {
-        console.error('ERR:' + error.message);
-    }
-
 }
 
 run();

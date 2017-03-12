@@ -12,7 +12,7 @@ import * as trm from 'vsts-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
 
-exports.rest = restm;
+declare let rest;
 
 let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
@@ -27,7 +27,7 @@ export function isExplicitVersion(range: string) {
     debug('isExplicit: ', c);
 
     let valid = semver.valid(c) != null;
-    debug('explit?', valid + '');
+    debug('explicit?', valid + '');
 
     return valid;
 }
@@ -183,9 +183,9 @@ function _getTempPath(): string {
 }
 
 function _getCacheRoot(): string {
-    let cacheRoot = process.env['SYSTEM_TOOLCACHE'];
+    let cacheRoot = process.env['AGENT_TOOLCACHE'];
     if (!cacheRoot) {
-        throw new Error('System.ToolCache not set.  Should have been set by the agent.  Try updating your agent.');
+        throw new Error('Agent.ToolCache not set.  Should have been set by the agent.  Try updating your agent.');
     }
     return cacheRoot;
 }

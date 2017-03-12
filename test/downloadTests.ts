@@ -16,7 +16,7 @@ describe('Download Tests', function () {
         try {
             let cachePath = path.join(__dirname, 'CACHE');
             tl.mkdirP(cachePath);
-            process.env['SYSTEM_TOOLCACHE'] = cachePath;
+            process.env['AGENT_TOOLCACHE'] = cachePath;
             toolLib.debug('initializing tests');
         }
         catch (err) {
