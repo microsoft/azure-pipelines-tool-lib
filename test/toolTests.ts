@@ -65,11 +65,13 @@ describe('Download Tests', function () {
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 
-                toolLib.installBinary(downPath, 'foo', '1.1.0');
+                toolLib.installBinary(downPath, 'foo', '1.1.0', 'foo');
 
                 let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
-
                 assert(tl.exist(toolPath), 'found tool exists');
+
+                let binaryPath: string = path.join(toolPath, 'foo');
+                assert(tl.exist(binaryPath), 'binary should exist');
                 resolve();
             }
             catch(err) {
@@ -83,20 +85,16 @@ describe('Download Tests', function () {
 
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                toolLib.debug('downloaded path:', downPath);
+                let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 
-                assert(tl.exist(downPath), 'downloaded file exists');
-
-                toolLib.installBinary(downPath, 'foo', '1.1.0');
-                toolLib.installBinary(downPath, 'foo', '1.2.0');
-                toolLib.installBinary(downPath, 'foo', '2.0.0');
+                toolLib.installBinary(downPath1_1, 'foo', '1.1.0', 'foo');
+                toolLib.installBinary(downPath1_2, 'foo', '1.2.0', 'foo');
 
                 let versions: string[] = toolLib.findLocalToolVersions('foo');
-                assert(versions.length == 3, 'should have found two versions');
+                assert(versions.length == 2, 'should have found two versions');
                 assert(versions.indexOf('1.1.0') >= 0, 'should have 1.1.0');
                 assert(versions.indexOf('1.2.0') >= 0, 'should have 1.2.0');
-                assert(versions.indexOf('2.0.0') >= 0, 'should have 2.0.0');
                 
                 let latest = toolLib.evaluateVersions(versions, '1.x');
                 assert(latest === '1.2.0');
@@ -108,4 +106,57 @@ describe('Download Tests', function () {
             }
         });
     });
+
+    it('evaluates major match (1.x)', () => {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let versions: string[] = ['1.0.0', '1.1.0', '2.0.0'];
+                let latest = toolLib.evaluateVersions(versions, '1.x');
+                assert(latest === '1.1.0');
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('evaluates greater than or equal (>=4.1)', () => {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let versions: string[] = ['4.0.0', '4.1.0', '4.1.1', '5.0.0'];
+                let latest = toolLib.evaluateVersions(versions, '>=4.1');
+                assert(latest === '5.0.0');
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('prepends path', () => {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let testDir: string = path.join(__dirname);
+                toolLib.prependPath(testDir);
+                let currPath: string = process.env['PATH'];
+                toolLib.debug(currPath);
+                assert(currPath.indexOf(testDir) == 0, 'new path should be first');
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });            
 });

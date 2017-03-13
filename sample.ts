@@ -3,6 +3,12 @@ import * as restm from 'typed-rest-client/RestClient';
 import * as os from 'os';
 import * as path from 'path';
 
+// setting cache dir to this folder. 
+// tasks don't need to do this - agent will set this.
+// let cacheDir = path.join(__dirname, 'CACHE');
+// process.env['AGENT_TOOLCACHE'] = cacheDir;
+// tl.mkdirP(cacheDir);
+
 async function run() {
     try {
         // explicit version
@@ -108,8 +114,9 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
 
         // a real task would not pass file name as it would generate in temp (better)
         let downloadPath: string = await toolLib.downloadTool(downloadUrl, urlFileName);
-        toolLib.installTar(downloadPath, 'node', version);
-        
+        console.log((new Date()).toISOString());
+        await toolLib.installTar(downloadPath, 'node', version);
+
         // a tool installer initimately knows details about the layout of that tool
         // for example, node binary is in the bin folder after the extract.
         // layouts could change by version, by platform etc... but that's the tool installers job
@@ -117,6 +124,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         toolPath = path.join(toolPath, 'bin');
     }
 
+    console.log((new Date()).toISOString());
     toolLib.prependPath(toolPath);
     console.log();
 }

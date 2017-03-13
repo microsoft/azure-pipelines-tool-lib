@@ -12,6 +12,10 @@ In development.  Preview installer tasks soon.
 
 Sample of tool api usage is [here](sample.ts)
 
+```bash
+$ npm run sample
+```
+
 # Build
 
 Once:  

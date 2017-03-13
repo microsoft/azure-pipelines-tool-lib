@@ -1,6 +1,7 @@
 require('shelljs/make');
 var fs = require('fs');
 var path = require('path');
+var tl = require('vsts-task-lib/task');
 
 // util functions
 var util = require('./make-util');
@@ -72,4 +73,16 @@ target.test = function() {
     //cp('-Rf', rp('test/scripts'), testPath);
     process.env['TASKLIB_INPROC_UNITS'] = '1'; // export task-lib internals for internal unit testing
     run('mocha ' + testPath + ' --recursive', true);
+}
+
+target.sample = function() {
+    target.build();
+
+    tl.pushd(buildPath);
+    let cacheDir = path.join(process.cwd(), 'CACHE');
+    process.env['AGENT_TOOLCACHE'] = cacheDir;
+    tl.rmRF(cacheDir);
+    tl.mkdirP(cacheDir);
+    run('node sample.js', true);
+    tl.popd();
 }

@@ -22,8 +22,35 @@ export function debug(...params: string[]) {
     console.log('[debug]' + params.join(' '));
 }
 
-export function isExplicitVersion(range: string) {
-    let c = semver.clean(range);
+
+export function prependPath(toolPath: string) {
+    debug('prepend path:', toolPath);
+    // TODO: should we enforce?
+    if (!tl.exist(toolPath)) {
+        throw new Error('Path does not exist: ' + toolPath);
+    }
+
+    // TODO: colon works on windows right?
+    let newPath: string = toolPath + ':' + process.env['PATH'];
+    debug('new Path:', newPath);
+    process.env['PATH'] = newPath;
+
+    // instruct the agent to set this path on future tasks
+    console.log('##vso[task.prependpath]' + toolPath);
+}
+
+//-----------------------------
+// Version Functions
+//-----------------------------
+
+/**
+ * Checks if a version spec is an explicit version (e.g. 1.0.1 or v1.0.1)
+ * As opposed to a version spec like 1.x
+ * 
+ * @param versionSpec 
+ */
+export function isExplicitVersion(versionSpec: string) {
+    let c = semver.clean(versionSpec);
     debug('isExplicit: ', c);
 
     let valid = semver.valid(c) != null;
@@ -32,6 +59,38 @@ export function isExplicitVersion(range: string) {
     return valid;
 }
 
+/**
+ * evaluates a list of versions and returns the latest version matching the version spec
+ * 
+ * @param versions      an array of versions to evaluate
+ * @param versionSpec   a version spec (e.g. 1.x)
+ */
+export function evaluateVersions(versions: string[], versionSpec: string): string {
+    let version: string;
+    debug('evaluating', versions.length + '', 'versions');
+    versions = versions.sort(cmp);
+    for (let i=0; i<versions.length; i++) {
+        let potential: string = versions[i];
+        let satisfied: boolean = semver.satisfies(potential, versionSpec);
+        //debug(potential, 'satisfies', versionRange, '?', satisfied + '');
+        if (satisfied) {
+            version = potential;
+        }
+    }
+    
+    return version;
+}
+
+//-----------------------------
+// Local Tool Cache Functions
+//-----------------------------
+/**
+ * finds the path to a tool in the local installed tool cache
+ * 
+ * @param toolName  name of the tool
+ * @param version   version to get the path of
+ * @param arch      optional arch.  defaults to arch of computer
+ */
 export function findLocalTool(toolName: string, version: string, arch?: string) {
     let cacheRoot = _getCacheRoot();
     debug('cacheRoot:', cacheRoot);
@@ -50,6 +109,12 @@ export function findLocalTool(toolName: string, version: string, arch?: string) 
     return installedPath;
 }
 
+/**
+ * Retrieves the versions of a tool that is intalled in the local tool cache
+ * 
+ * @param toolName  name of the tool
+ * @param arch      optional arch.  defaults to arch of computer
+ */
 export function findLocalToolVersions(toolName: string, arch?: string) {
    let versions: string[] = [];
 
@@ -72,30 +137,21 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
    return versions; 
 }
 
-export function prependPath(toolPath: string) {
-    console.log('##vso[path.prepend]' + toolPath);
-}
-
-export function evaluateVersions(versions: string[], versionRange: string): string {
-    let version: string;
-    debug('evaluating', versions.length + '', 'versions');
-    versions = versions.sort(cmp);
-    for (let i=0; i<versions.length; i++) {
-        let potential: string = versions[i];
-        let satisfied: boolean = semver.satisfies(potential, versionRange);
-        //debug(potential, 'satisfies', versionRange, '?', satisfied + '');
-        if (satisfied) {
-            version = potential;
-        }
-    }
-    
-    return version;
-}
+//---------------------
+// Download Functions
+//---------------------
 
 //
-// TODO: support 302 redirect
+// TODO: download to TEMP (agent will set TEMP)
 // TODO: keep extension intact
+// TODO: support 302 redirect
 //
+/**
+ * Download a tool from an url and stream it into a file
+ * 
+ * @param url       url of tool to download
+ * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability)
+ */
 export async function downloadTool(url: string, fileName?:string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
@@ -133,9 +189,10 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
     });
 }
 
-//
+//---------------------
 // Extract Functions
-//
+//---------------------
+
 export interface IExtractOptions {
     keepRootFolder: boolean;
 }
@@ -143,17 +200,30 @@ export interface IExtractOptions {
 // TODO: extract function that does right thing by extension.
 //       make download keep the extension intact.
 
-export async function installBinary(file: string,
+/**
+ * Installs a downloaded binary (GUID) and installs it
+ * into the tool cache with a given binaryName
+ * 
+ * @param sourceFile 
+ * @param tool 
+ * @param version 
+ * @param binaryName 
+ * @param arch 
+ */
+export async function installBinary(sourceFile: string,
                                     tool: string,
                                     version: string,
+                                    binaryName: string,
                                     arch?: string) {
     debug('installing binary');
     arch = arch || os.arch();
-    let dest = path.join(_getCacheRoot(), tool, version, arch);
-    debug('destination', dest);
-    tl.mkdirP(dest);
+    let destFolder = path.join(_getCacheRoot(), tool, version, arch);
+    tl.mkdirP(destFolder);
 
-    tl.cp(file, dest, '-f');
+    let destPath = path.join(destFolder, binaryName);
+    debug('destination', destPath);
+
+    tl.mv(sourceFile, destPath);
 }
 
 /**
@@ -197,11 +267,16 @@ export async function installTar(file: string,
 // Query Functions
 //---------------------
 
-// TODO: function to query local store first.
 //       default input will be >= LTS version.  drop label different than value.
 //       v4 (LTS) would have a value of 4.x
 //       option to always download?  (not cache), TTL?
 
+/**
+ * Scrape a web page for versions by regex
+ * 
+ * @param url       url to scrape
+ * @param regex     regex to use for version matches
+ */
 export async function scrape(url: string, regex: RegExp): Promise<string[]> {
     let output: string = await (await http.get(url)).readBody();
 
@@ -217,7 +292,6 @@ export async function scrape(url: string, regex: RegExp): Promise<string[]> {
         }
     }
 
-    //versions = versions.sort(cmp);
     return versions;
 }
 
