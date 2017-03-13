@@ -17,7 +17,6 @@ async function run() {
     catch (error) {
         console.error('ERR:' + error.message);
     }
-
 }
 
 //
@@ -77,6 +76,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
                 }
             }
         });
+
         version = toolLib.evaluateVersions(versions, versionSpec);
         toolLib.debug('version from index.json', version);
         toolLib.debug('isLTS:' + ltsMap[version]);
@@ -96,7 +96,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
     }
     
 
-    let toolPath: string = toolLib.installedPath('node', version);
+    let toolPath: string = toolLib.findLocalTool('node', version);
     if (!toolPath) {
         // not installed
         toolLib.debug('download ' + version);
@@ -108,12 +108,12 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
 
         // a real task would not pass file name as it would generate in temp (better)
         let downloadPath: string = await toolLib.downloadTool(downloadUrl, urlFileName);
-        toolLib.extractTar(downloadPath, 'node', version);
+        toolLib.installTar(downloadPath, 'node', version);
         
         // a tool installer initimately knows details about the layout of that tool
         // for example, node binary is in the bin folder after the extract.
         // layouts could change by version, by platform etc... but that's the tool installers job
-        toolPath = toolLib.installedPath('node', version);
+        toolPath = toolLib.findLocalTool('node', version);
         toolPath = path.join(toolPath, 'bin');
     }
 

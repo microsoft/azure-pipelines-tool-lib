@@ -32,7 +32,7 @@ export function isExplicitVersion(range: string) {
     return valid;
 }
 
-export function installedPath(toolName: string, version: string, arch?: string) {
+export function findLocalTool(toolName: string, version: string, arch?: string) {
     let cacheRoot = _getCacheRoot();
     debug('cacheRoot:', cacheRoot);
 
@@ -48,6 +48,28 @@ export function installedPath(toolName: string, version: string, arch?: string) 
     debug('installedPath:', installedPath);
 
     return installedPath;
+}
+
+export function findLocalToolVersions(toolName: string, arch?: string) {
+   let versions: string[] = [];
+
+   arch = arch || os.arch();
+   let toolPath = path.join(_getCacheRoot(), toolName);
+
+   if (tl.exist(toolPath)) {
+        let children: string[] = tl.ls('', [toolPath]);
+        children.forEach((child: string) => {
+            
+            if (isExplicitVersion(child)) {
+                let fullPath = path.join(toolPath, child, arch);
+                if (tl.exist(fullPath)) {
+                    versions.push(semver.clean(child));
+                }
+            }
+        });
+   }
+
+   return versions; 
 }
 
 export function prependPath(toolPath: string) {
@@ -120,7 +142,30 @@ export interface IExtractOptions {
 
 // TODO: extract function that does right thing by extension.
 //       make download keep the extension intact.
-export async function extractTar(file: string, 
+
+export async function installBinary(file: string,
+                                    tool: string,
+                                    version: string,
+                                    arch?: string) {
+    debug('installing binary');
+    arch = arch || os.arch();
+    let dest = path.join(_getCacheRoot(), tool, version, arch);
+    debug('destination', dest);
+    tl.mkdirP(dest);
+
+    tl.cp(file, dest, '-f');
+}
+
+/**
+ * installs a tool from a tar by extracting the tar and installing it into the tool cache
+ * 
+ * @param file      file path of the tar 
+ * @param tool      name of tool in the tool cache
+ * @param version   version of the tool
+ * @param arch      arch of the tool.  optional.  defaults to the arch of the machine
+ * @param options   IExtractOptions
+ */
+export async function installTar(file: string, 
                                  tool: string, 
                                  version: string, 
                                  arch?: string,
