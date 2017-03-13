@@ -3,12 +3,6 @@ import * as restm from 'typed-rest-client/RestClient';
 import * as os from 'os';
 import * as path from 'path';
 
-// setting cache dir to this folder. 
-// tasks don't need to do this - agent will set this.
-// let cacheDir = path.join(__dirname, 'CACHE');
-// process.env['AGENT_TOOLCACHE'] = cacheDir;
-// tl.mkdirP(cacheDir);
-
 async function run() {
     try {
         // explicit version
