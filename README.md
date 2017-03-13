@@ -2,19 +2,11 @@
 
 Tool installer tasks SDK for [Visual Studio Team Services](https://www.visualstudio.com/en-us/products/visual-studio-team-services-vs.aspx) build and deployment.
 
-Reference examples of our in the box tasks [are here](https://github.com/Microsoft/vsts-tasks)
-
 [Tool Installer Task Overview: Read Here](docs/overview.md).
-
-In development.  Preview installer tasks soon.
-
-# Sample
 
 Sample of tool api usage is [here](sample.ts)
 
-```bash
-$ npm run sample
-```
+In development.  Preview installer tasks soon.
 
 # Build
 
@@ -33,6 +25,16 @@ $ npm run build
 ```bash
 $ npm test
 ```
+
+# Sample
+
+Build first.  Then run  
+
+```bash
+$ npm run sample
+```
+
+The tool cache will be in the _build folder.  To clear the cache, build again.
 
 # Contributing
 

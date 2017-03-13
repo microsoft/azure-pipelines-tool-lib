@@ -9,11 +9,9 @@ import os = require('os');
 import * as tl from 'vsts-task-lib/task';
 import * as toolLib from '../_build/tool';
 
-//import * as testutil from './testutil';
-
 let cachePath = path.join(__dirname, 'CACHE');
 
-describe('Download Tests', function () {
+describe('Tool Tests', function () {
     before(function (done) {
         try {
             process.env['AGENT_TOOLCACHE'] = cachePath;
@@ -38,7 +36,7 @@ describe('Download Tests', function () {
     })
 
     it('downloads a 100 byte file', () => {
-        this.timeout(2000);
+        this.timeout(5000);
 
         return new Promise<void>(async(resolve, reject)=> {
             try {

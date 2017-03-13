@@ -75,13 +75,12 @@ target.test = function() {
     run('mocha ' + testPath + ' --recursive', true);
 }
 
+// run the sample
+// building again is the way to clear the tool cache (creates it in the build dir)
 target.sample = function() {
-    target.build();
-
     tl.pushd(buildPath);
     let cacheDir = path.join(process.cwd(), 'CACHE');
     process.env['AGENT_TOOLCACHE'] = cacheDir;
-    tl.rmRF(cacheDir);
     tl.mkdirP(cacheDir);
     run('node sample.js', true);
     tl.popd();
