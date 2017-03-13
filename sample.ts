@@ -77,6 +77,9 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
             }
         });
 
+        //
+        // get the latest version that matches the version spec
+        //
         version = toolLib.evaluateVersions(versions, versionSpec);
         toolLib.debug('version from index.json', version);
         toolLib.debug('isLTS:' + ltsMap[version]);
@@ -95,7 +98,9 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         }
     }
     
-
+    //
+    // Check if the version we resolved is installed in the local tool cache
+    //
     let toolPath: string = toolLib.findLocalTool('node', version);
     if (!toolPath) {
         // not installed
@@ -106,19 +111,28 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
                                             'node-v' + version + '-' + osPlat + '-' + os.arch() + '.tar.gz';  
         let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + urlFileName; 
 
-        // a real task would not pass file name as it would generate in temp (better)
-        let downloadPath: string = await toolLib.downloadTool(downloadUrl, urlFileName);
-        console.log((new Date()).toISOString());
+        //
+        // Download the tool
+        //
+        let downloadPath: string = await toolLib.downloadTool(downloadUrl);
+
+        //
+        // Extract the tar and install it into the local tool cache
+        //
         await toolLib.installTar(downloadPath, 'node', version);
 
+        //
         // a tool installer initimately knows details about the layout of that tool
         // for example, node binary is in the bin folder after the extract.
         // layouts could change by version, by platform etc... but that's the tool installers job
+        //
         toolPath = toolLib.findLocalTool('node', version);
         toolPath = path.join(toolPath, 'bin');
     }
 
-    console.log((new Date()).toISOString());
+    //
+    // prepend the tools path. instructs the agent to prepend for future tasks
+    //
     toolLib.prependPath(toolPath);
     console.log();
 }
