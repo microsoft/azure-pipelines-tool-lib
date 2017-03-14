@@ -263,6 +263,42 @@ export async function installTar(file: string,
     await tr.exec();
 }
 
+export async function installZip(file: string,
+                                 tool: string,
+                                 version: string,
+                                 arch?: string) {
+    if (!file) {
+        throw new Error("parameter 'file' is required");
+    }
+
+    debug('extracting zip');
+    arch = arch || os.arch();
+    let dest = path.join(_getCacheRoot(), tool, version, arch);
+    debug('destination', dest);
+    tl.mkdirP(dest);
+
+    if (process.platform == 'win32') {
+        // build the powershell command
+        let escapedFile = file.replace(/'/g, "''") // double-up single quotes
+        let escapedDest = dest.replace(/'/g, "''");
+        let command: string = `$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}')`;
+
+        // change the console output code page to UTF-8.
+        // TODO: FIX WHICH: let chcpPath = tl.which('chcp.com', true);
+        let chcpPath = path.join(process.env.windir, "system32", "chcp.com");
+        await tl.exec(chcpPath, '65001');
+
+        // run powershell
+        let powershellPath = tl.which('powershell', true);
+        let powershell: trm.ToolRunner = tl.tool(powershellPath)
+            .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
+            .arg(command);
+        await powershell.exec();
+    }
+    else {
+    }
+}
+
 //---------------------
 // Query Functions
 //---------------------
