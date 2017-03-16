@@ -153,7 +153,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         // node extracts with a root folder that matches the fileName downloaded
         let toolRoot = path.join(extPath, fileName);
         
-        toolLib.cachePath(toolRoot, 'node', version);
+        toolLib.cacheDir(toolRoot, 'node', version);
     }
 
     console.log('using version: ' + version);
