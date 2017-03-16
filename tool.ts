@@ -199,46 +199,70 @@ function _ensureToolPath(tool:string, version: string, arch?: string): string {
     return destFolder;
 }
 
-export async function cachePath(sourcePath: string,
-                              tool: string,
-                              version: string,
-                              arch?: string) {
-    debug('installing binary');
-    arch = arch || os.arch();
-
-    debug('source:', sourcePath);
-    let destPath: string = _ensureToolPath(tool, version, arch);
-    debug('destination', destPath);
-
-    tl.cp(sourcePath + '/', destPath + '/', '-r');
-    debug('copied');
-}
-
 /**
- * Caches a downloaded binary (GUID) and installs it
- * into the tool cache with a given binaryName
+ * Caches a directory and installs it into the tool cacheDir
  * 
- * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid. 
- * @param binaryName    the name of the binary name in the toolCache
+ * @param sourceDir    the directory to cache into tools
  * @param tool          tool name  
  * @param version       version of the tool.  semver format
  * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
  */
-export async function cacheBinary(sourceFile: string,
-                                    binaryName: string,
-                                    tool: string,
-                                    version: string,
-                                    arch?: string) {
-    debug('installing binary');
+export async function cacheDir(sourceDir: string,
+                               tool: string,
+                               version: string,
+                               arch?: string) {
+    debug('caching directory');
     arch = arch || os.arch();
+
+    debug('source:', sourceDir);
+    if (!tl.stats(sourceDir).isDirectory()) {
+        throw new Error('sourceDir is not a directory');
+    }
+
+    let destPath: string = _ensureToolPath(tool, version, arch);
+    debug('destination', destPath);
+
+    // copy each child item. do not move. move can fail on Windows
+    // due to anti-virus software having an open handle on a file.
+    for (let itemName of fs.readdirSync(sourceDir)) {
+        let s = path.join(sourceDir, itemName);
+        tl.cp(s, destPath + '/', '-r');
+    }
+
+    debug('copied');
+}
+
+/**
+ * Caches a downloaded file (GUID) and installs it
+ * into the tool cache with a given targetName
+ * 
+ * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid. 
+ * @param targetFile    the name of the file name in the toolCache
+ * @param tool          tool name  
+ * @param version       version of the tool.  semver format
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
+ */
+export async function cacheFile(sourceFile: string,
+                                targetFile: string,
+                                tool: string,
+                                version: string,
+                                arch?: string) {
+    debug('caching file');
+    arch = arch || os.arch();
+
+    debug('source:', sourceFile);
+    if (!tl.stats(sourceFile).isFile()) {
+        throw new Error('sourceFile is not a file');
+    }
 
     let destFolder: string = _ensureToolPath(tool, version, arch);
 
-    let destPath: string = path.join(destFolder, binaryName);
+    let destPath: string = path.join(destFolder, targetFile);
     debug('destination', destPath);
 
-    // TODO: copy so virus scanners don't have issues
-    tl.mv(sourceFile, destPath);
+    // copy instead of move. move can fail on Windows due to
+    // anti-virus software having an open handle on a file.
+    tl.cp(sourceFile, destPath);
     debug('copied');
 }
 

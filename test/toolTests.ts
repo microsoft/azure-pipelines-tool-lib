@@ -63,7 +63,7 @@ describe('Tool Tests', function () {
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 
-                toolLib.cacheBinary(downPath, 'foo', 'foo', '1.1.0');
+                toolLib.cacheFile(downPath, 'foo', 'foo', '1.1.0');
 
                 let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
                 assert(tl.exist(toolPath), 'found tool exists');
@@ -108,7 +108,7 @@ describe('Tool Tests', function () {
 
                 /* remove if-condition when Mac/Linux support is added */ if (process.platform == 'win32') {
                 let extPath: string = await toolLib.extractZip(zipFile);
-                toolLib.cachePath(extPath, 'foo', '1.1.0');
+                toolLib.cacheDir(extPath, 'foo', '1.1.0');
                 let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
                 assert(tl.exist(toolPath), 'found tool exists');
                 assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
@@ -131,8 +131,8 @@ describe('Tool Tests', function () {
                 let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 
-                toolLib.cacheBinary(downPath1_1, 'foo', 'foo', '1.1.0');
-                toolLib.cacheBinary(downPath1_2, 'foo', 'foo', '1.2.0');
+                toolLib.cacheFile(downPath1_1, 'foo', 'foo', '1.1.0');
+                toolLib.cacheFile(downPath1_2, 'foo', 'foo', '1.2.0');
 
                 let versions: string[] = toolLib.findLocalToolVersions('foo');
                 assert(versions.length == 2, 'should have found two versions');
