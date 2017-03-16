@@ -2,6 +2,7 @@ require('shelljs/make');
 var fs = require('fs');
 var path = require('path');
 var tl = require('vsts-task-lib/task');
+var os = require('os');
 
 // util functions
 var util = require('./make-util');
@@ -79,9 +80,18 @@ target.test = function() {
 // building again is the way to clear the tool cache (creates it in the build dir)
 target.sample = function() {
     tl.pushd(buildPath);
+    
+    // creating a cache dir in the build dir.  agent would do this
     let cacheDir = path.join(process.cwd(), 'CACHE');
     process.env['AGENT_TOOLCACHE'] = cacheDir;
     tl.mkdirP(cacheDir);
+
+    // redirecting TEMP (agent would do this per build)
+    let tempDir = path.join(process.cwd(), 'TEMP');
+    let tempName = os.platform == 'win32' ? "TEMP" : "TMPDIR";
+    process.env[tempName] = tempDir;
+    tl.mkdirP(tempDir);   
+
     run('node sample.js', true);
     tl.popd();
 }

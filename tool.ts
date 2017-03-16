@@ -157,7 +157,7 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
         try {
             debug(fileName);
             fileName = fileName || uuidV4();
-            var destPath = path.join(_getTempPath(), fileName);
+            var destPath = path.join(os.tmpdir(), fileName);
 
             debug('downloading', url);
             debug('destination', destPath);
@@ -190,41 +190,61 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
 }
 
 //---------------------
-// Extract Functions
+// Install Functions
 //---------------------
-
-export interface IExtractOptions {
-    keepRootFolder: boolean;
-}
-
-// TODO: extract function that does right thing by extension.
-//       make download keep the extension intact.
-
-/**
- * Installs a downloaded binary (GUID) and installs it
- * into the tool cache with a given binaryName
- * 
- * @param sourceFile 
- * @param tool 
- * @param version 
- * @param binaryName 
- * @param arch 
- */
-export async function installBinary(sourceFile: string,
-                                    tool: string,
-                                    version: string,
-                                    binaryName: string,
-                                    arch?: string) {
-    debug('installing binary');
-    arch = arch || os.arch();
+function _ensureToolPath(tool:string, version: string, arch?: string): string {
     let destFolder = path.join(_getCacheRoot(), tool, version, arch);
     tl.mkdirP(destFolder);
 
-    let destPath = path.join(destFolder, binaryName);
+    return destFolder;
+}
+
+export async function cachePath(sourcePath: string,
+                              tool: string,
+                              version: string,
+                              arch?: string) {
+    debug('installing binary');
+    arch = arch || os.arch();
+
+    debug('source:', sourcePath);
+    let destPath: string = _ensureToolPath(tool, version, arch);
     debug('destination', destPath);
 
-    tl.mv(sourceFile, destPath);
+    tl.cp(sourcePath + '/', destPath + '/', '-r');
+    debug('copied');
 }
+
+/**
+ * Caches a downloaded binary (GUID) and installs it
+ * into the tool cache with a given binaryName
+ * 
+ * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid. 
+ * @param binaryName    the name of the binary name in the toolCache
+ * @param tool          tool name  
+ * @param version       version of the tool.  semver format
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
+ */
+export async function cacheBinary(sourceFile: string,
+                                    binaryName: string,
+                                    tool: string,
+                                    version: string,
+                                    arch?: string) {
+    debug('installing binary');
+    arch = arch || os.arch();
+
+    let destFolder: string = _ensureToolPath(tool, version, arch);
+
+    let destPath: string = path.join(destFolder, binaryName);
+    debug('destination', destPath);
+
+    // TODO: copy so virus scanners don't have issues
+    tl.mv(sourceFile, destPath);
+    debug('copied');
+}
+
+//---------------------
+// Extract Functions
+//---------------------
 
 /**
  * installs a tool from a tar by extracting the tar and installing it into the tool cache
@@ -235,47 +255,28 @@ export async function installBinary(sourceFile: string,
  * @param arch      arch of the tool.  optional.  defaults to the arch of the machine
  * @param options   IExtractOptions
  */
-export async function installTar(file: string, 
-                                 tool: string, 
-                                 version: string, 
-                                 arch?: string,
-                                 options?: IExtractOptions) {
-
-    options = options || <IExtractOptions>{};
-    options = <IExtractOptions>{};
-    options.keepRootFolder = options.keepRootFolder || false;
+export async function extractTar(file: string): Promise<string> {
 
     // mkdir -p node/4.7.0/x64
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
     
     debug('extracting tar');
-    arch = arch || os.arch();
-    let dest = path.join(_getCacheRoot(), tool, version, arch);
-    debug('destination', dest);
-    tl.mkdirP(dest);
+    let dest = _createExtractFolder(path.dirname(file));
 
     let tr:trm.ToolRunner = tl.tool('tar');
     tr.arg(['xzC', dest, '-f', file]);
-    if (!options.keepRootFolder) {
-        tr.arg(['--strip-components', '1']);
-    }
     
     await tr.exec();
+    return dest;
 }
 
-export async function installZip(file: string,
-                                 tool: string,
-                                 version: string,
-                                 arch?: string) {
+export async function extractZip(file: string): Promise<string> {
     if (!file) {
         throw new Error("parameter 'file' is required");
     }
 
     debug('extracting zip');
-    arch = arch || os.arch();
-    let dest = path.join(_getCacheRoot(), tool, version, arch);
-    debug('destination', dest);
-    tl.mkdirP(dest);
+    let dest = _createExtractFolder(path.dirname(file));
 
     if (process.platform == 'win32') {
         // build the powershell command
@@ -297,6 +298,15 @@ export async function installZip(file: string,
     }
     else {
     }
+
+    return dest;    
+}
+
+function _createExtractFolder(folder: string): string {
+    // extract in same folder as the tar to a guid folder to avoid conflicts
+    let dest = path.join(folder, uuidV4());
+    tl.mkdirP(dest);
+    return dest;    
 }
 
 //---------------------
@@ -329,12 +339,6 @@ export async function scrape(url: string, regex: RegExp): Promise<string[]> {
     }
 
     return versions;
-}
-
-// privates
-function _getTempPath(): string {
-    // TODO: does agent now set TEMP?  Is there a common var.
-    return _getCacheRoot();
 }
 
 function _getCacheRoot(): string {

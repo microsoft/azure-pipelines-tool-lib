@@ -136,8 +136,11 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         toolLib.debug('download ' + version);
 
         // a tool installer intimately knows how to get that tools (and construct urls)
-        let urlFileName: string = osPlat == 'win32'? 'node-v' + version + '-win-' + os.arch() + '.7z':
-                                            'node-v' + version + '-' + osPlat + '-' + os.arch() + '.tar.gz';  
+        let fileName: string = osPlat == 'win32'? 'node-v' + version + '-win-' + os.arch() :
+                                            'node-v' + version + '-' + osPlat + '-' + os.arch();  
+        let urlFileName: string = osPlat == 'win32'? fileName + '.7z':
+                                                     fileName + '.tar.gz';  
+
         let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + urlFileName; 
 
         let downloadPath: string = await toolLib.downloadTool(downloadUrl);
@@ -145,7 +148,12 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         //
         // Extract the tar and install it into the local tool cache
         //
-        await toolLib.installTar(downloadPath, 'node', version);        
+        let extPath = await toolLib.extractTar(downloadPath);
+
+        // node extracts with a root folder that matches the fileName downloaded
+        let toolRoot = path.join(extPath, fileName);
+        
+        toolLib.cachePath(toolRoot, 'node', version);
     }
 
     console.log('using version: ' + version);
