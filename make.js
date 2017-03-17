@@ -45,7 +45,9 @@ target.build = function() {
     cp(rp('package.json'), buildPath);
     cp(rp('README.md'), buildPath);
     cp(rp('LICENSE'), buildPath);
+    cp(rp('Invoke-7zdec.ps1'), buildPath);
     cp(rp('lib.json'), buildPath);
+    cp('-R', rp('externals'), buildPath);
     cp('-Rf', rp('Strings'), buildPath);
     // just a bootstrap file to avoid /// in final js and .d.ts file
     rm(path.join(buildPath, 'index.*'));
@@ -71,8 +73,8 @@ target.test = function() {
     target.build();
 
     run('tsc -p ./test --outDir ' + testPath, true);
+    cp('-R', path.join(__dirname, 'test', 'data'), testPath);
     //cp('-Rf', rp('test/scripts'), testPath);
-    process.env['TASKLIB_INPROC_UNITS'] = '1'; // export task-lib internals for internal unit testing
     run('mocha ' + testPath + ' --recursive', true);
 }
 
