@@ -27,7 +27,7 @@ describe('Tool Tests', function () {
 
     });
 
-    beforeEach(() => {
+    beforeEach(function () {
         if (tl.exist(cachePath)) {
             tl.rmRF(cachePath);
         }
@@ -35,7 +35,7 @@ describe('Tool Tests', function () {
         tl.mkdirP(cachePath);        
     })
 
-    it('downloads a 100 byte file', () => {
+    it('downloads a 100 byte file', function () {
         this.timeout(5000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -53,7 +53,7 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('installs a binary tool and finds it', () => {
+    it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -78,7 +78,39 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('installs a zip and finds it', () => {
+if (process.platform == 'win32') {
+    it('installs a 7z and finds it', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let tempDir = path.join(__dirname, 'test-install-7z');
+                tl.mkdirP(tempDir);
+
+                // copy the 7z file to the test dir
+                let _7zFile: string = path.join(tempDir, 'test.7z');
+                tl.cp(path.join(__dirname, 'data', 'test.7z'), _7zFile);
+
+                // extract/cache
+                let extPath: string = await toolLib.extract7z(_7zFile);
+                toolLib.cacheDir(extPath, 'my-7z-contents', '1.1.0');
+                let toolPath: string = toolLib.findLocalTool('my-7z-contents', '1.1.0');
+
+                assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
+                assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
+                assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });
+}
+
+    it('installs a zip and finds it', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -123,7 +155,7 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('finds and evaluates local tool version', () => {
+    it('finds and evaluates local tool version', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -150,7 +182,7 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('evaluates major match (1.x)', () => {
+    it('evaluates major match (1.x)', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -167,7 +199,7 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('evaluates greater than or equal (>=4.1)', () => {
+    it('evaluates greater than or equal (>=4.1)', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -184,7 +216,7 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('prepends path', () => {
+    it('prepends path', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {

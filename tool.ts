@@ -270,6 +270,46 @@ export async function cacheFile(sourceFile: string,
 // Extract Functions
 //---------------------
 
+export async function extract7z(file: string): Promise<string> {
+    if (process.platform != 'win32') {
+        throw new Error('extract7z() not supported on current OS');
+    }
+
+    if (!file) {
+        throw new Error("parameter 'file' is required");
+    }
+
+    debug('extracting 7z');
+    let dest = _createExtractFolder(path.dirname(file));
+
+    let originalCwd = process.cwd();
+    try {
+        process.chdir(dest);
+
+        // extract
+        let escapedScript = path.join(__dirname, 'Invoke-7zdec.ps1').replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
+        let escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+        let escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+        let command: string = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`
+        let powershellPath = tl.which('powershell', true);
+        let powershell: trm.ToolRunner = tl.tool(powershellPath)
+            .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
+            .arg(command);
+        powershell.on('stdout', (buffer: Buffer) => {
+            process.stdout.write(buffer);
+        });
+        powershell.on('stderr', (buffer: Buffer) => {
+            process.stderr.write(buffer);
+        });
+        await powershell.exec(<trm.IExecOptions>{ silent: true });
+    }
+    finally {
+        process.chdir(originalCwd);
+    }
+
+    return dest;
+}
+
 /**
  * installs a tool from a tar by extracting the tar and installing it into the tool cache
  * 
@@ -304,8 +344,8 @@ export async function extractZip(file: string): Promise<string> {
 
     if (process.platform == 'win32') {
         // build the powershell command
-        let escapedFile = file.replace(/'/g, "''") // double-up single quotes
-        let escapedDest = dest.replace(/'/g, "''");
+        let escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
+        let escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
         let command: string = `$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}')`;
 
         // change the console output code page to UTF-8.
@@ -323,7 +363,7 @@ export async function extractZip(file: string): Promise<string> {
     else {
     }
 
-    return dest;    
+    return dest;
 }
 
 function _createExtractFolder(folder: string): string {
