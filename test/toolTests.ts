@@ -7,14 +7,18 @@ import fs = require('fs');
 import shell = require('shelljs');
 import os = require('os');
 import * as tl from 'vsts-task-lib/task';
+import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
 
 let cachePath = path.join(__dirname, 'CACHE');
+let tempPath = path.join(__dirname, 'TEMP');
 
 describe('Tool Tests', function () {
     before(function (done) {
         try {
-            process.env['AGENT_TOOLCACHE'] = cachePath;
+            process.env['AGENT_TEMPDIRECTORY'] = tempPath;
+            process.env['AGENT_TOOLSDIRECTORY'] = cachePath;
+            process.env['AGENT_VERSION'] = '2.115.0';
             toolLib.debug('initializing tests');
         }
         catch (err) {
@@ -28,11 +32,10 @@ describe('Tool Tests', function () {
     });
 
     beforeEach(function () {
-        if (tl.exist(cachePath)) {
-            tl.rmRF(cachePath);
-        }
-
-        tl.mkdirP(cachePath);        
+        tl.rmRF(cachePath);
+        tl.rmRF(tempPath);
+        tl.mkdirP(cachePath);
+        tl.mkdirP(tempPath);
     })
 
     it('downloads a 100 byte file', function () {
@@ -63,10 +66,11 @@ describe('Tool Tests', function () {
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 
-                toolLib.cacheFile(downPath, 'foo', 'foo', '1.1.0');
+                await toolLib.cacheFile(downPath, 'foo', 'foo', '1.1.0');
 
                 let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
                 assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
 
                 let binaryPath: string = path.join(toolPath, 'foo');
                 assert(tl.exist(binaryPath), 'binary should exist');
@@ -97,6 +101,7 @@ if (process.platform == 'win32') {
                 let toolPath: string = toolLib.findLocalTool('my-7z-contents', '1.1.0');
 
                 assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
                 assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
                 assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
                 assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
@@ -116,6 +121,7 @@ if (process.platform == 'win32') {
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let tempDir = path.join(__dirname, 'test-install-zip');
+                tl.mkdirP(tempDir);
 
                 // stage the layout for a zip file:
                 //   file.txt
@@ -130,22 +136,26 @@ if (process.platform == 'win32') {
                 if (process.platform == 'win32') {
                     let escapedStagingPath = stagingDir.replace(/'/g, "''") // double-up single quotes
                     let escapedZipFile = zipFile.replace(/'/g, "''");
-                    let powershell = tl.tool(tl.which('powershell'))
+                    let powershell = tl.tool(tl.which('powershell', true))
                         .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
                         .arg(`$ErrorActionPreference = 'Stop' ; Add-Type -AssemblyName System.IO.Compression.FileSystem ; [System.IO.Compression.ZipFile]::CreateFromDirectory('${escapedStagingPath}', '${escapedZipFile}')`);
                     powershell.execSync();
                 }
                 else {
+                    let zip = tl.tool('zip')
+                        .arg(zipFile)
+                        .arg('-r')
+                        .arg('.');
+                    zip.execSync(<trm.IExecOptions>{ cwd: stagingDir });
                 }
 
-                /* remove if-condition when Mac/Linux support is added */ if (process.platform == 'win32') {
                 let extPath: string = await toolLib.extractZip(zipFile);
                 toolLib.cacheDir(extPath, 'foo', '1.1.0');
                 let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
                 assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
                 assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
                 assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
-                /* remove if-condition when Mac/Linux support is added */ }
 
                 resolve();
             }
@@ -233,5 +243,5 @@ if (process.platform == 'win32') {
                 reject(err);
             }
         });
-    });            
+    });
 });

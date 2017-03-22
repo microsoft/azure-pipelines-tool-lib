@@ -24,14 +24,14 @@ export function debug(...params: string[]) {
 
 
 export function prependPath(toolPath: string) {
+    tl.assertAgent('2.115.0');
     debug('prepend path:', toolPath);
-    // TODO: should we enforce?
     if (!tl.exist(toolPath)) {
         throw new Error('Path does not exist: ' + toolPath);
     }
 
-    // TODO: colon works on windows right?
-    let newPath: string = toolPath + ':' + process.env['PATH'];
+    // todo: add a test for path
+    let newPath: string = toolPath + path.delimiter + process.env['PATH'];
     debug('new Path:', newPath);
     process.env['PATH'] = newPath;
 
@@ -93,7 +93,6 @@ export function evaluateVersions(versions: string[], versionSpec: string): strin
  */
 export function findLocalTool(toolName: string, version: string, arch?: string) {
     let cacheRoot = _getCacheRoot();
-    debug('cacheRoot:', cacheRoot);
 
     arch = arch || os.arch();
 
@@ -101,7 +100,7 @@ export function findLocalTool(toolName: string, version: string, arch?: string) 
     let cachePath = path.join(cacheRoot, toolName, version, arch);
     debug('cachePath:', cachePath);
 
-    if (fs.existsSync(cachePath)) {
+    if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
         installedPath = cachePath;
     }
     debug('installedPath:', installedPath);
@@ -121,6 +120,7 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
    arch = arch || os.arch();
    let toolPath = path.join(_getCacheRoot(), toolName);
 
+//todo: verify .complete
    if (tl.exist(toolPath)) {
         let children: string[] = tl.ls('', [toolPath]);
         children.forEach((child: string) => {
@@ -157,7 +157,7 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
         try {
             debug(fileName);
             fileName = fileName || uuidV4();
-            var destPath = path.join(os.tmpdir(), fileName);
+            var destPath = path.join(_getAgentTemp(), fileName);
 
             debug('downloading', url);
             debug('destination', destPath);
@@ -192,11 +192,22 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
 //---------------------
 // Install Functions
 //---------------------
-function _ensureToolPath(tool:string, version: string, arch?: string): string {
-    let destFolder = path.join(_getCacheRoot(), tool, version, arch);
-    tl.mkdirP(destFolder);
+function _createToolPath(tool:string, version: string, arch?: string): string {
+    // todo: add test for clean
+    let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
+    debug('destination', folderPath);
+    let markerPath: string = `${folderPath}.complete`;
+    tl.rmRF(folderPath);
+    tl.rmRF(markerPath);
+    tl.mkdirP(folderPath);
+    return folderPath;
+}
 
-    return destFolder;
+function _completeToolPath(tool:string, version: string, arch?: string): void {
+    let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
+    let markerPath: string = `${folderPath}.complete`;
+    tl.writeFile(markerPath, '');
+    debug('finished caching tool');
 }
 
 /**
@@ -219,8 +230,8 @@ export async function cacheDir(sourceDir: string,
         throw new Error('sourceDir is not a directory');
     }
 
-    let destPath: string = _ensureToolPath(tool, version, arch);
-    debug('destination', destPath);
+    // create the tool dir
+    let destPath: string = _createToolPath(tool, version, arch);
 
     // copy each child item. do not move. move can fail on Windows
     // due to anti-virus software having an open handle on a file.
@@ -229,7 +240,8 @@ export async function cacheDir(sourceDir: string,
         tl.cp(s, destPath + '/', '-r');
     }
 
-    debug('copied');
+    // write .complete
+    _completeToolPath(tool, version, arch);
 }
 
 /**
@@ -237,7 +249,7 @@ export async function cacheDir(sourceDir: string,
  * into the tool cache with a given targetName
  * 
  * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid. 
- * @param targetFile    the name of the file name in the toolCache
+ * @param targetFile    the name of the file name in the tools directory
  * @param tool          tool name  
  * @param version       version of the tool.  semver format
  * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
@@ -255,15 +267,17 @@ export async function cacheFile(sourceFile: string,
         throw new Error('sourceFile is not a file');
     }
 
-    let destFolder: string = _ensureToolPath(tool, version, arch);
-
-    let destPath: string = path.join(destFolder, targetFile);
-    debug('destination', destPath);
+    // create the tool dir
+    let destFolder: string = _createToolPath(tool, version, arch);
 
     // copy instead of move. move can fail on Windows due to
     // anti-virus software having an open handle on a file.
+    let destPath: string = path.join(destFolder, targetFile);
+    debug('destination file', destPath);
     tl.cp(sourceFile, destPath);
-    debug('copied');
+
+    // write .complete
+    _completeToolPath(tool, version, arch);
 }
 
 //---------------------
@@ -280,7 +294,7 @@ export async function extract7z(file: string): Promise<string> {
     }
 
     debug('extracting 7z');
-    let dest = _createExtractFolder(path.dirname(file));
+    let dest = _createExtractFolder();
 
     let originalCwd = process.cwd();
     try {
@@ -325,7 +339,7 @@ export async function extractTar(file: string): Promise<string> {
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
     
     debug('extracting tar');
-    let dest = _createExtractFolder(path.dirname(file));
+    let dest = _createExtractFolder();
 
     let tr:trm.ToolRunner = tl.tool('tar');
     tr.arg(['xzC', dest, '-f', file]);
@@ -340,7 +354,7 @@ export async function extractZip(file: string): Promise<string> {
     }
 
     debug('extracting zip');
-    let dest = _createExtractFolder(path.dirname(file));
+    let dest = _createExtractFolder();
 
     if (process.platform == 'win32') {
         // build the powershell command
@@ -354,21 +368,23 @@ export async function extractZip(file: string): Promise<string> {
         await tl.exec(chcpPath, '65001');
 
         // run powershell
-        let powershellPath = tl.which('powershell', true);
-        let powershell: trm.ToolRunner = tl.tool(powershellPath)
+        let powershell: trm.ToolRunner = tl.tool('powershell')
             .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
             .arg(command);
         await powershell.exec();
     }
     else {
+        let unzip: trm.ToolRunner = tl.tool('unzip')
+            .arg(file);
+        await unzip.exec(<trm.IExecOptions>{ cwd: dest });
     }
 
     return dest;
 }
 
-function _createExtractFolder(folder: string): string {
-    // extract in same folder as the tar to a guid folder to avoid conflicts
-    let dest = path.join(folder, uuidV4());
+function _createExtractFolder(): string {
+    // create a temp dir
+    let dest = path.join(_getAgentTemp(), uuidV4());
     tl.mkdirP(dest);
     return dest;    
 }
@@ -406,10 +422,21 @@ export async function scrape(url: string, regex: RegExp): Promise<string[]> {
 }
 
 function _getCacheRoot(): string {
-    let cacheRoot = process.env['AGENT_TOOLCACHE'];
+    tl.assertAgent('2.115.0');
+    let cacheRoot = tl.getVariable('Agent.ToolsDirectory');
     if (!cacheRoot) {
-        throw new Error('Agent.ToolCache not set.  Should have been set by the agent.  Try updating your agent.');
+        throw new Error('Agent.ToolsDirectory is not set');
     }
+
     return cacheRoot;
 }
 
+function _getAgentTemp(): string {
+    tl.assertAgent('2.115.0');
+    let tempDirectory = tl.getVariable('Agent.TempDirectory');
+    if (!tempDirectory) {
+        throw new Error('Agent.TempDirectory is not set');
+    }
+
+    return tempDirectory;
+}
