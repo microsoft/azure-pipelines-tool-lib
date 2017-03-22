@@ -85,7 +85,7 @@ target.sample = function() {
     
     // creating a cache dir in the build dir.  agent would do this
     let cacheDir = path.join(process.cwd(), 'CACHE');
-    process.env['AGENT_TOOLCACHE'] = cacheDir;
+    process.env['AGENT_TOOLSDIRECTORY'] = cacheDir;
     tl.mkdirP(cacheDir);
 
     // redirecting TEMP (agent would do this per build)
