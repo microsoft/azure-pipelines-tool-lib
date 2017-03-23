@@ -16,21 +16,20 @@ let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let http: httpm.HttpClient = new httpm.HttpClient(userAgent);
 
-export function debug(...params: string[]) {
-    console.log('[debug]' + params.join(' '));
+export function debug(message: string): void {
+    tl.debug(message);
 }
-
 
 export function prependPath(toolPath: string) {
     tl.assertAgent('2.115.0');
-    debug('prepend path:', toolPath);
+    tl.debug('prepend path: ' + toolPath);
     if (!tl.exist(toolPath)) {
         throw new Error('Path does not exist: ' + toolPath);
     }
 
     // todo: add a test for path
     let newPath: string = toolPath + path.delimiter + process.env['PATH'];
-    debug('new Path:', newPath);
+    tl.debug('new Path: ' + newPath);
     process.env['PATH'] = newPath;
 
     // instruct the agent to set this path on future tasks
@@ -49,10 +48,10 @@ export function prependPath(toolPath: string) {
  */
 export function isExplicitVersion(versionSpec: string) {
     let c = semver.clean(versionSpec);
-    debug('isExplicit: ', c);
+    tl.debug('isExplicit: ' + c);
 
     let valid = semver.valid(c) != null;
-    debug('explicit?', valid + '');
+    tl.debug('explicit? ' + valid);
 
     return valid;
 }
@@ -65,7 +64,7 @@ export function isExplicitVersion(versionSpec: string) {
  */
 export function evaluateVersions(versions: string[], versionSpec: string): string {
     let version: string;
-    debug('evaluating', versions.length + '', 'versions');
+    tl.debug('evaluating ' + versions.length + ' versions');
     versions = versions.sort(cmp);
     for (let i=0; i<versions.length; i++) {
         let potential: string = versions[i];
@@ -96,12 +95,12 @@ export function findLocalTool(toolName: string, version: string, arch?: string) 
 
     let installedPath: string;
     let cachePath = path.join(cacheRoot, toolName, version, arch);
-    debug('cachePath:', cachePath);
+    tl.debug('cachePath: ' + cachePath);
 
     if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
         installedPath = cachePath;
     }
-    debug('installedPath:', installedPath);
+    tl.debug('installedPath: ' + installedPath);
 
     return installedPath;
 }
@@ -118,14 +117,13 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
    arch = arch || os.arch();
    let toolPath = path.join(_getCacheRoot(), toolName);
 
-//todo: verify .complete
    if (tl.exist(toolPath)) {
         let children: string[] = tl.ls('', [toolPath]);
         children.forEach((child: string) => {
             
             if (isExplicitVersion(child)) {
                 let fullPath = path.join(toolPath, child, arch);
-                if (tl.exist(fullPath)) {
+                if (tl.exist(fullPath) && tl.exist(`${fullPath}.complete`)) {
                     versions.push(semver.clean(child));
                 }
             }
@@ -153,26 +151,26 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 export async function downloadTool(url: string, fileName?:string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
-            debug(fileName);
+            tl.debug(fileName);
             fileName = fileName || uuidV4();
             var destPath = path.join(_getAgentTemp(), fileName);
 
-            debug('downloading', url);
-            debug('destination', destPath);
+            tl.debug('downloading ' + url);
+            tl.debug('destination ' + destPath);
 
             if (fs.existsSync(destPath)) {
                 throw new Error("Destination file path already exists");
             }
 
             // TODO: retries
-            debug('creating stream');
+            tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file.on('open', async(fd) => {
-                debug('downloading');
+                tl.debug('downloading');
                 let stream = (await http.get(url)).message.pipe(file);
 
                 stream.on('finish', () => {
-                    debug('download complete');
+                    tl.debug('download complete');
                     resolve(destPath);
                 });
             });
@@ -193,7 +191,7 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
 function _createToolPath(tool:string, version: string, arch?: string): string {
     // todo: add test for clean
     let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
-    debug('destination', folderPath);
+    tl.debug('destination ' + folderPath);
     let markerPath: string = `${folderPath}.complete`;
     tl.rmRF(folderPath);
     tl.rmRF(markerPath);
@@ -205,7 +203,7 @@ function _completeToolPath(tool:string, version: string, arch?: string): void {
     let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
     let markerPath: string = `${folderPath}.complete`;
     tl.writeFile(markerPath, '');
-    debug('finished caching tool');
+    tl.debug('finished caching tool');
 }
 
 /**
@@ -220,10 +218,10 @@ export async function cacheDir(sourceDir: string,
                                tool: string,
                                version: string,
                                arch?: string) {
-    debug('caching directory');
+    tl.debug('caching directory');
     arch = arch || os.arch();
 
-    debug('source:', sourceDir);
+    tl.debug('source: ' + sourceDir);
     if (!tl.stats(sourceDir).isDirectory()) {
         throw new Error('sourceDir is not a directory');
     }
@@ -257,10 +255,10 @@ export async function cacheFile(sourceFile: string,
                                 tool: string,
                                 version: string,
                                 arch?: string) {
-    debug('caching file');
+    tl.debug('caching file');
     arch = arch || os.arch();
 
-    debug('source:', sourceFile);
+    tl.debug('source:' + sourceFile);
     if (!tl.stats(sourceFile).isFile()) {
         throw new Error('sourceFile is not a file');
     }
@@ -271,7 +269,7 @@ export async function cacheFile(sourceFile: string,
     // copy instead of move. move can fail on Windows due to
     // anti-virus software having an open handle on a file.
     let destPath: string = path.join(destFolder, targetFile);
-    debug('destination file', destPath);
+    tl.debug('destination file' + destPath);
     tl.cp(sourceFile, destPath);
 
     // write .complete
@@ -291,7 +289,7 @@ export async function extract7z(file: string): Promise<string> {
         throw new Error("parameter 'file' is required");
     }
 
-    debug('extracting 7z');
+    tl.debug('extracting 7z');
     let dest = _createExtractFolder();
 
     let originalCwd = process.cwd();
@@ -336,7 +334,7 @@ export async function extractTar(file: string): Promise<string> {
     // mkdir -p node/4.7.0/x64
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
     
-    debug('extracting tar');
+    tl.debug('extracting tar');
     let dest = _createExtractFolder();
 
     let tr:trm.ToolRunner = tl.tool('tar');
@@ -351,7 +349,7 @@ export async function extractZip(file: string): Promise<string> {
         throw new Error("parameter 'file' is required");
     }
 
-    debug('extracting zip');
+    tl.debug('extracting zip');
     let dest = _createExtractFolder();
 
     if (process.platform == 'win32') {

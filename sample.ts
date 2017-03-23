@@ -74,7 +74,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
         //
         if (toolLib.isExplicitVersion(versionSpec)) {
             // given exact version to get
-            toolLib.debug('explicit match', versionSpec);
+            toolLib.debug('explicit match ' + versionSpec);
             version = versionSpec;
         }
         else {
@@ -113,7 +113,7 @@ async function getNode(versionSpec: string, onlyLTS: boolean) {
             // get the latest version that matches the version spec
             //
             version = toolLib.evaluateVersions(versions, versionSpec);
-            toolLib.debug('version from index.json', version);
+            toolLib.debug('version from index.json ' + version);
             toolLib.debug('isLTS:' + ltsMap[version]);
 
             //

@@ -44,7 +44,7 @@ describe('Tool Tests', function () {
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                toolLib.debug('downloaded path:', downPath);
+                toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 
@@ -62,7 +62,7 @@ describe('Tool Tests', function () {
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                toolLib.debug('downloaded path:', downPath);
+                toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
 
