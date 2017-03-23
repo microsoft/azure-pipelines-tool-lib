@@ -166,13 +166,22 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file.on('open', async(fd) => {
-                tl.debug('downloading');
-                let stream = (await http.get(url)).message.pipe(file);
+                try {
+                    tl.debug('downloading');
+                    let response: httpm.HttpClientResponse = await http.get(url);
+                    if (response.message.statusCode != 200) {
+                        throw(new Error('Unexpected HTTP response: ' + response.message.statusCode));
+                    }
 
-                stream.on('finish', () => {
-                    tl.debug('download complete');
-                    resolve(destPath);
-                });
+                    let stream = response.message.pipe(file);
+                    stream.on('finish', () => {
+                        tl.debug('download complete');
+                        resolve(destPath);
+                    });
+                }
+                catch (err) {
+                    reject(err);
+                }
             });
             file.on('error', (err) => {
                 reject(err);
