@@ -89,12 +89,20 @@ export function evaluateVersions(versions: string[], versionSpec: string): strin
  * @param arch      optional arch.  defaults to arch of computer
  */
 export function findLocalTool(toolName: string, version: string, arch?: string) {
+    if (!toolName) {
+        throw new Error('toolName parameter is required');
+    }
+
+    if (!version) {
+        throw new Error('version parameter is required');
+    }
+
     let cacheRoot = _getCacheRoot();
 
     arch = arch || os.arch();
 
     let installedPath: string;
-    let cachePath = path.join(cacheRoot, toolName, version, arch);
+    let cachePath = path.join(cacheRoot, toolName, semver.clean(version), arch);
     tl.debug('cachePath: ' + cachePath);
 
     if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
@@ -124,7 +132,7 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
             if (isExplicitVersion(child)) {
                 let fullPath = path.join(toolPath, child, arch);
                 if (tl.exist(fullPath) && tl.exist(`${fullPath}.complete`)) {
-                    versions.push(semver.clean(child));
+                    versions.push(child);
                 }
             }
         });
