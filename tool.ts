@@ -289,7 +289,7 @@ export async function cacheFile(sourceFile: string,
 // Extract Functions
 //---------------------
 
-export async function extract7z(file: string): Promise<string> {
+export async function extract7z(file: string, dest?: string): Promise<string> {
     if (process.platform != 'win32') {
         throw new Error('extract7z() not supported on current OS');
     }
@@ -299,7 +299,7 @@ export async function extract7z(file: string): Promise<string> {
     }
 
     tl.debug('extracting 7z');
-    let dest = _createExtractFolder();
+    dest =  _createExtractFolder(dest);
 
     let originalCwd = process.cwd();
     try {
@@ -387,11 +387,14 @@ export async function extractZip(file: string): Promise<string> {
     return dest;
 }
 
-function _createExtractFolder(): string {
-    // create a temp dir
-    let dest = path.join(_getAgentTemp(), uuidV4());
+function _createExtractFolder(dest?: string): string {
+    if (!dest) {
+        // create a temp dir
+        dest = path.join(_getAgentTemp(), uuidV4());
+    }
+
     tl.mkdirP(dest);
-    return dest;    
+    return dest;
 }
 
 //---------------------
