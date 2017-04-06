@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var tl = require('vsts-task-lib/task');
 var os = require('os');
+var xml2js = require('xml2js');
 
 // util functions
 var util = require('./make-util');
@@ -55,18 +56,138 @@ target.build = function() {
 
 target.loc = function() {
     var lib = require('./lib.json');
-    var strPath = path.join('Strings', 'resources.resjson', 'en-US')
-    mkdir('-p', strPath);
-    var strings = {};
+
+    // build the en-US xliff object
+    var defaultXliff = {
+        "$": {
+            "version": "1.2"
+        },
+        "file": {
+            "$": {
+                "original": "lib.json",
+                "source-language": "en-US",
+                "target-language": "en-US",
+                "datatype": "plaintext"
+            },
+            "body": []
+        }
+    };
     if (lib.messages) {
         for (var key in lib.messages) {
-            strings['loc.messages.' + key] = lib.messages[key];
+            defaultXliff.file.body.push({
+                "trans-unit": {
+                    "$": {
+                        "id": `loc.messages.${key}`
+                    },
+                    "source": lib.messages[key],
+                    "target": {
+                        "$": {
+                            "state": "final"
+                        },
+                        "_": lib.messages[key]
+                    }
+                }
+            })
         }
     }
+    var options = {
+        "rootName": "xliff",
+        "renderOpts": {
+            "pretty": true,
+            "indent": "  ",
+            "newline": os.EOL
+        },
+        "xmldec": {
+            "version": "1.0",
+            "encoding": "UTF-8"
+        }
+    };
+    var builder = new xml2js.Builder(options);
+    var xml = builder.buildObject(defaultXliff);
 
-    // create the en-US resjson file.
-    var enContents = JSON.stringify(strings, null, 2);
-    fs.writeFileSync(path.join(strPath, 'resources.resjson'), enContents)
+    // write the en-US xliff file
+    var xlfPath = path.join(__dirname, 'xliff', 'lib.en-US.xlf');
+    mkdir('-p', path.dirname(xlfPath));
+    fs.writeFileSync(xlfPath, xml);
+
+    // create a key->value map of the default strings
+    var defaultStrings = { };
+    for (var unit of defaultXliff.file.body) {
+        defaultStrings[unit.$.id] = unit.source;
+    }
+
+    // create the resjson files
+    var cultures = [ 'en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW' ];
+    for (var culture of cultures) {
+        // load the culture-specific xliff file
+        var xliffPath = path.join(__dirname, 'xliff', `lib.${culture}.xlf`);
+        var stats;
+        try {
+            stats = fs.statSync(xliffPath);
+        }
+        catch (err) {
+            if (err.code == 'ENOENT') {
+                continue;
+            }
+
+            throw err;
+        }
+
+        // parse the culture-specific xliff contents
+        var parser = new xml2js.Parser();
+        parser.parseString(
+            fs.readFileSync(xliffPath),
+            function (err, cultureXliff) {
+                // initialize the culture-specific strings from the default strings
+                var cultureStrings = { };
+                for (var key of Object.keys(defaultStrings)) {
+                    cultureStrings[key] = defaultStrings[key];
+                }
+
+                // overlay the translated strings
+                for (var unit of cultureXliff.file.body) {
+                    if (unit.target.$.state == 'final' &&
+                        defaultStrings.hasOwnProperty(unit.$.id) &&
+                        defaultStrings[unit.$.id] == unit.source) {
+
+                        cultureStrings[unit.$.id] = unit.target._;
+                    }
+                }
+
+                // write the culture-specific resjson file
+                var resjsonPath = path.join(__dirname, 'Strings', 'resources.resjson', culture, 'resources.resjson');
+                var resjsonContents = JSON.stringify(cultureStrings, null, 2);
+                fs.writeFileSync(resjsonPath, resjsonContents);
+            });
+    }
+
+    // fs.writeFileSync()
+    /**
+     * build:
+     * write en-US xlf file
+     * foreach (lang)
+     *  foreach (key in en-US file)
+     *   if (lang[key].source == en-US[key].source && lang[key].state == final)
+     *    lang_resjson[key] = lang[key].target
+     *   else
+     *    lang_resjson[key] = en-US[key].source
+     * 
+     * handoff:
+     * foreach (lang)
+     *  // update
+     *  foreach (key in en-US file)
+     *   if (lang[key].source != en-US[key].source)
+     *    lang[key].source = en-US[key].source
+     *    lang[key].state = needs translation
+     *  // delete
+     *  foreach (key in lang file)
+     *   if (!en-US.containsKey(key))
+     *     delete lang[key]
+     * 
+     * handback:
+     * merge PR
+     * 
+     */
 }
 
 target.test = function() {
