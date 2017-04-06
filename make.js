@@ -30,6 +30,7 @@ addPath(binPath);
 
 var buildPath = path.join(__dirname, '_build');
 var testPath = path.join(__dirname, '_test');
+var cultures = [ 'en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW' ];
 
 target.clean = function() {
     rm('-Rf', buildPath);
@@ -55,8 +56,6 @@ target.build = function() {
 }
 
 target.loc = function() {
-    var lib = require('./lib.json');
-
     // build the en-US xliff object
     var defaultXliff = {
         "$": {
@@ -69,25 +68,26 @@ target.loc = function() {
                 "target-language": "en-US",
                 "datatype": "plaintext"
             },
-            "body": []
+            "body": {
+                "trans-unit": [ ]
+            }
         }
     };
+    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
     if (lib.messages) {
         for (var key in lib.messages) {
-            defaultXliff.file.body.push({
-                "trans-unit": {
+            defaultXliff.file.body['trans-unit'].push({
+                "$": {
+                    "id": `loc.messages.${key}`
+                },
+                "source": lib.messages[key],
+                "target": {
                     "$": {
-                        "id": `loc.messages.${key}`
+                        "state": "final"
                     },
-                    "source": lib.messages[key],
-                    "target": {
-                        "$": {
-                            "state": "final"
-                        },
-                        "_": lib.messages[key]
-                    }
+                    "_": lib.messages[key]
                 }
-            })
+            });
         }
     }
     var options = {
@@ -106,19 +106,24 @@ target.loc = function() {
     var xml = builder.buildObject(defaultXliff);
 
     // write the en-US xliff file
-    var xlfPath = path.join(__dirname, 'xliff', 'lib.en-US.xlf');
-    mkdir('-p', path.dirname(xlfPath));
-    fs.writeFileSync(xlfPath, xml);
+    var xliffPath = path.join(__dirname, 'xliff', 'lib.en-US.xlf');
+    mkdir('-p', path.dirname(xliffPath));
+    fs.writeFileSync(xliffPath, xml);
 
     // create a key->value map of the default strings
     var defaultStrings = { };
-    for (var unit of defaultXliff.file.body) {
+    for (var unit of defaultXliff.file.body['trans-unit']) {
         defaultStrings[unit.$.id] = unit.source;
     }
 
-    // create the resjson files
-    var cultures = [ 'en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW' ];
+    // create the culture-specific resjson files
     for (var culture of cultures) {
+        // initialize the culture-specific strings from the default strings
+        var cultureStrings = { };
+        for (var key of Object.keys(defaultStrings)) {
+            cultureStrings[key] = defaultStrings[key];
+        }
+
         // load the culture-specific xliff file
         var xliffPath = path.join(__dirname, 'xliff', `lib.${culture}.xlf`);
         var stats;
@@ -138,56 +143,26 @@ target.loc = function() {
         parser.parseString(
             fs.readFileSync(xliffPath),
             function (err, cultureXliff) {
-                // initialize the culture-specific strings from the default strings
-                var cultureStrings = { };
-                for (var key of Object.keys(defaultStrings)) {
-                    cultureStrings[key] = defaultStrings[key];
+                if (err) {
+                    throw err;
                 }
 
                 // overlay the translated strings
-                for (var unit of cultureXliff.file.body) {
-                    if (unit.target.$.state == 'final' &&
+                for (var unit of cultureXliff.xliff.file[0].body[0]['trans-unit']) {
+                    if (unit.target[0].$.state == 'final' &&
                         defaultStrings.hasOwnProperty(unit.$.id) &&
-                        defaultStrings[unit.$.id] == unit.source) {
+                        defaultStrings[unit.$.id] == unit.source[0]) {
 
-                        cultureStrings[unit.$.id] = unit.target._;
+                        cultureStrings[unit.$.id] = unit.target[0]._;
                     }
                 }
-
-                // write the culture-specific resjson file
-                var resjsonPath = path.join(__dirname, 'Strings', 'resources.resjson', culture, 'resources.resjson');
-                var resjsonContents = JSON.stringify(cultureStrings, null, 2);
-                fs.writeFileSync(resjsonPath, resjsonContents);
             });
-    }
 
-    // fs.writeFileSync()
-    /**
-     * build:
-     * write en-US xlf file
-     * foreach (lang)
-     *  foreach (key in en-US file)
-     *   if (lang[key].source == en-US[key].source && lang[key].state == final)
-     *    lang_resjson[key] = lang[key].target
-     *   else
-     *    lang_resjson[key] = en-US[key].source
-     * 
-     * handoff:
-     * foreach (lang)
-     *  // update
-     *  foreach (key in en-US file)
-     *   if (lang[key].source != en-US[key].source)
-     *    lang[key].source = en-US[key].source
-     *    lang[key].state = needs translation
-     *  // delete
-     *  foreach (key in lang file)
-     *   if (!en-US.containsKey(key))
-     *     delete lang[key]
-     * 
-     * handback:
-     * merge PR
-     * 
-     */
+        // write the culture-specific resjson file
+        var resjsonPath = path.join(__dirname, 'Strings', 'resources.resjson', culture, 'resources.resjson');
+        var resjsonContents = JSON.stringify(cultureStrings, null, 2);
+        fs.writeFileSync(resjsonPath, resjsonContents);
+    }
 }
 
 target.test = function() {
@@ -217,4 +192,24 @@ target.sample = function() {
 
     run('node sample.js', true);
     tl.popd();
+}
+
+target.handoff = function() {
+    /**
+     * handoff:
+     * foreach (lang)
+     *  // update
+     *  foreach (key in en-US file)
+     *   if (lang[key].source != en-US[key].source)
+     *    lang[key].source = en-US[key].source
+     *    lang[key].state = needs translation
+     *  // delete
+     *  foreach (key in lang file)
+     *   if (!en-US.containsKey(key))
+     *     delete lang[key]
+     * 
+     * handback:
+     * merge PR
+     * 
+     */
 }
