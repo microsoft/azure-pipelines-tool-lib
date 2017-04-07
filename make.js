@@ -159,7 +159,7 @@ target.handoff = function() {
     if (lib.messages) {
         for (var key of Object.keys(lib.messages)) {
             // skip resjson-style comments for localizers
-            if (!key || !key.match(/^_.+\.comment$/)) {
+            if (!key || key.match(/^_.+\.comment$/)) {
                 continue;
             }
 
@@ -250,7 +250,7 @@ target.handoff = function() {
             if (!unitMap.hasOwnProperty(key)) {
                 unitMap[key] = {
                     "$": {
-                        "id": $key
+                        "id": key
                     },
                     "source": [
                         defaultStrings[key]

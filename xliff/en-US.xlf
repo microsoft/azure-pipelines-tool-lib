@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2">
+  <file original="lib.json" source-language="en-US" target-language="en-US" datatype="plaintext">
+    <body>
+      <trans-unit id="loc.messages.LIB_UnhandledEx">
+        <source>Unhandled: %s</source>
+        <target state="new">Unhandled: %s</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="loc.messages.LIB_FailOnCode">
+        <source>Failure return code: %d</source>
+        <target state="new">Failure return code: %d</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
