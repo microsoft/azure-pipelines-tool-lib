@@ -15,6 +15,7 @@ declare let rest;
 let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let http: httpm.HttpClient = new httpm.HttpClient(userAgent);
+tl.setResourcePath(path.join(__dirname, 'lib.json'));
 
 export function debug(message: string): void {
     tl.debug(message);
@@ -30,7 +31,7 @@ export function prependPath(toolPath: string) {
     }
 
     // todo: add a test for path
-    console.log('Prepending PATH environment variable with directory: ' + toolPath);
+    console.log(tl.loc('TOOL_LIB_PrependPath', toolPath));
     let newPath: string = toolPath + path.delimiter + process.env['PATH'];
     tl.debug('new Path: ' + newPath);
     process.env['PATH'] = newPath;
@@ -133,7 +134,7 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
         let cachePath = path.join(cacheRoot, toolName, versionSpec, arch);
         tl.debug('checking cache: ' + cachePath);
         if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
-            console.log(`Found tool in cache: ${toolName} ${versionSpec} ${arch}`);
+            console.log(tl.loc('TOOL_LIB_FoundInCache', toolName, versionSpec, arch));
             toolPath = cachePath;
         }
         else {
@@ -194,7 +195,7 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
             fileName = fileName || uuidV4();
             var destPath = path.join(_getAgentTemp(), fileName);
 
-            console.log('Downloading: ' + url);
+            console.log(tl.loc('TOOL_LIB_Downloading', url));
             tl.debug('destination ' + destPath);
 
             if (fs.existsSync(destPath)) {
@@ -227,7 +228,6 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
             })
         }
         catch (error) {
-            console.log('ERR!');
             reject(error);
         }
     });
@@ -268,7 +268,7 @@ export async function cacheDir(sourceDir: string,
                                arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
-    console.log(`Caching tool: ${tool} ${version} ${arch}`);
+    console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source dir: ' + sourceDir);
     if (!tl.stats(sourceDir).isDirectory()) {
@@ -308,7 +308,7 @@ export async function cacheFile(sourceFile: string,
                                 arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
-    console.log(`Caching tool: ${tool} ${version} ${arch}`);
+    console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source file:' + sourceFile);
     if (!tl.stats(sourceFile).isFile()) {
@@ -343,7 +343,7 @@ export async function extract7z(file: string, dest?: string): Promise<string> {
         throw new Error("parameter 'file' is required");
     }
 
-    console.log('Extracting archive');
+    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
     dest =  _createExtractFolder(dest);
 
     let originalCwd = process.cwd();
@@ -388,7 +388,7 @@ export async function extractTar(file: string): Promise<string> {
     // mkdir -p node/4.7.0/x64
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
 
-    console.log('Extracting archive');
+    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
     let dest = _createExtractFolder();
 
     let tr:trm.ToolRunner = tl.tool('tar');
@@ -403,7 +403,7 @@ export async function extractZip(file: string): Promise<string> {
         throw new Error("parameter 'file' is required");
     }
 
-    console.log('Extracting archive');
+    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
     let dest = _createExtractFolder();
 
     if (process.platform == 'win32') {
