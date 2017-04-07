@@ -56,64 +56,13 @@ target.build = function() {
 }
 
 target.loc = function() {
-    // build the en-US xliff object
-    var defaultXliff = {
-        "$": {
-            "version": "1.2"
-        },
-        "file": {
-            "$": {
-                "original": "lib.json",
-                "source-language": "en-US",
-                "target-language": "en-US",
-                "datatype": "plaintext"
-            },
-            "body": {
-                "trans-unit": [ ]
-            }
-        }
-    };
-    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
-    if (lib.messages) {
-        for (var key in lib.messages) {
-            defaultXliff.file.body['trans-unit'].push({
-                "$": {
-                    "id": `loc.messages.${key}`
-                },
-                "source": lib.messages[key],
-                "target": {
-                    "$": {
-                        "state": "final"
-                    },
-                    "_": lib.messages[key]
-                }
-            });
-        }
-    }
-    var options = {
-        "rootName": "xliff",
-        "renderOpts": {
-            "pretty": true,
-            "indent": "  ",
-            "newline": os.EOL
-        },
-        "xmldec": {
-            "version": "1.0",
-            "encoding": "UTF-8"
-        }
-    };
-    var builder = new xml2js.Builder(options);
-    var xml = builder.buildObject(defaultXliff);
-
-    // write the en-US xliff file
-    var xliffPath = path.join(__dirname, 'xliff', 'lib.en-US.xlf');
-    mkdir('-p', path.dirname(xliffPath));
-    fs.writeFileSync(xliffPath, xml);
-
     // create a key->value map of the default strings
     var defaultStrings = { };
-    for (var unit of defaultXliff.file.body['trans-unit']) {
-        defaultStrings[unit.$.id] = unit.source;
+    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
+    if (lib.messages) {
+        for (var key of Object.keys(lib.messages)) {
+            defaultStrings[`loc.messages.${key}`] = lib.messages[key];
+        }
     }
 
     // create the culture-specific resjson files
@@ -125,7 +74,7 @@ target.loc = function() {
         }
 
         // load the culture-specific xliff file
-        var xliffPath = path.join(__dirname, 'xliff', `lib.${culture}.xlf`);
+        var xliffPath = path.join(__dirname, 'xliff', `${culture}.xlf`);
         var stats;
         try {
             stats = fs.statSync(xliffPath);
@@ -149,7 +98,7 @@ target.loc = function() {
 
                 // overlay the translated strings
                 for (var unit of cultureXliff.xliff.file[0].body[0]['trans-unit']) {
-                    if (unit.target[0].$.state == 'final' &&
+                    if (unit.target[0].$.state == 'translated' &&
                         defaultStrings.hasOwnProperty(unit.$.id) &&
                         defaultStrings[unit.$.id] == unit.source[0]) {
 
@@ -195,21 +144,165 @@ target.sample = function() {
 }
 
 target.handoff = function() {
-    /**
-     * handoff:
-     * foreach (lang)
-     *  // update
-     *  foreach (key in en-US file)
-     *   if (lang[key].source != en-US[key].source)
-     *    lang[key].source = en-US[key].source
-     *    lang[key].state = needs translation
-     *  // delete
-     *  foreach (key in lang file)
-     *   if (!en-US.containsKey(key))
-     *     delete lang[key]
-     * 
-     * handback:
-     * merge PR
-     * 
-     */
+    // create a key->value map of default strings
+    var defaultStrings = { };
+    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
+    if (lib.messages) {
+        for (var key of Object.keys(lib.messages)) {
+            // skip resjson-style comments for localizers
+            if (!key || !key.match(/^_.+\.comment$/)) {
+                continue;
+            }
+
+            defaultStrings[`loc.messages.${key}`] = lib.messages[key];
+        }
+    }
+
+    // create a key->value map of comments for localizers
+    //
+    // resjson-style comments for localizers:
+    //   "greeting": "Hello",
+    //   "_greeting.comment": "A welcome greeting.",
+    //
+    // for more details about resjson: https://msdn.microsoft.com/en-us/library/windows/apps/hh465254.aspx
+    var comments = { };
+    if (lib.messages) {
+        for (var commentKey of Object.keys(lib.messages)) {
+            if (commentKey && commentKey.match(/^_.+\.comment$/)) {
+                valueKey = commentKey.substr('_'.length, commentKey.length - '_.comment'.length);
+                comments[`loc.messages.${valueKey}`] = lib.messages[commentKey];
+            }
+        }
+    }
+
+    // create or update the culture-specific xlf files
+    for (var culture of cultures) {
+        // test whether xliff file exists
+        var xliffPath = path.join(__dirname, 'xliff', `${culture}.xlf`);
+        var stats;
+        try {
+            stats = fs.statSync(xliffPath);
+        }
+        catch (err) {
+            if (err.code != 'ENOENT') {
+                throw err;
+            }
+        }
+
+        var xliff;
+        if (stats) {
+            // parse the file
+            var parser = new xml2js.Parser();
+            parser.parseString(
+                fs.readFileSync(xliffPath),
+                function (err, result) {
+                    if (err) {
+                        throw err;
+                    }
+
+                    xliff = result;
+                }
+            )
+        }
+        else {
+            // create the initial xliff object
+            xliff = {
+                "xliff": {
+                    "$": {
+                        "version": "1.2"
+                    },
+                    "file": [
+                        {
+                            "$": {
+                                "original": "lib.json",
+                                "source-language": "en-US",
+                                "target-language": culture,
+                                "datatype": "plaintext"
+                            },
+                            "body": [
+                                {
+                                    "trans-unit": [ ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+
+        // create a map of trans-unit
+        var unitMap = { };
+        for (var unit of xliff.xliff.file[0].body[0]['trans-unit']) {
+            unitMap[unit.source[0]] = unit;
+        }
+
+        for (var key of Object.keys(defaultStrings)) {
+            // add the trans-unit
+            if (!unitMap.hasOwnProperty(key)) {
+                unitMap[key] = {
+                    "$": {
+                        "id": $key
+                    },
+                    "source": [
+                        defaultStrings[key]
+                    ],
+                    "target": [
+                        {
+                            "$": {
+                                "state": "new"
+                            },
+                            "_": defaultStrings[key]
+                        }
+                    ],
+                    "note": [
+                        (comments[key] || "")
+                    ]
+                };
+            }
+            // update the trans-unit
+            else if (unitMap[key].source[0] != defaultStrings[key]) {
+                unitMap[key].target = [
+                    {
+                        "$": {
+                            "state": "needs-translation"
+                        },
+                        "_": defaultStrings[key]
+                    }
+                ];
+                unitMap[key].note = [
+                    (comments[key] || "")
+                ];
+            }
+        }
+
+        for (var key of Object.keys(unitMap)) {
+            // delete the trans-unit
+            if (!defaultStrings.hasOwnProperty(key)) {
+                delete unitMap[key];
+            }
+        }
+
+        // update the body of the xliff object
+        xliff.xliff.file[0].body[0]['trans-unit'] = [ ];
+        for (var key of Object.keys(unitMap)) {
+            xliff.xliff.file[0].body[0]['trans-unit'].push(unitMap[key]);
+        }
+
+        // write the xliff file
+        var options = {
+            "renderOpts": {
+                "pretty": true,
+                "indent": "  ",
+                "newline": os.EOL
+            },
+            "xmldec": {
+                "version": "1.0",
+                "encoding": "UTF-8"
+            }
+        };
+        var builder = new xml2js.Builder(options);
+        var xml = builder.buildObject(xliff);
+        mkdir('-p', path.dirname(xliffPath));
+        fs.writeFileSync(xliffPath, xml);
+    }
 }
