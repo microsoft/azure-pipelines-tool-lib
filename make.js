@@ -70,6 +70,11 @@ target.loc = function() {
         // initialize the culture-specific strings from the default strings
         var cultureStrings = { };
         for (var key of Object.keys(defaultStrings)) {
+            // skip resjson-style comments for localizers
+            if (!key || key.match(/^_.+\.comment$/)) {
+                continue;
+            }
+
             cultureStrings[key] = defaultStrings[key];
         }
 
@@ -80,36 +85,40 @@ target.loc = function() {
             stats = fs.statSync(xliffPath);
         }
         catch (err) {
-            if (err.code == 'ENOENT') {
-                continue;
+            if (err.code != 'ENOENT') {
+                throw err;
             }
-
-            throw err;
         }
 
-        // parse the culture-specific xliff contents
-        var parser = new xml2js.Parser();
-        parser.parseString(
-            fs.readFileSync(xliffPath),
-            function (err, cultureXliff) {
-                if (err) {
-                    throw err;
-                }
-
-                // overlay the translated strings
-                for (var unit of cultureXliff.xliff.file[0].body[0]['trans-unit']) {
-                    if (unit.target[0].$.state == 'translated' &&
-                        defaultStrings.hasOwnProperty(unit.$.id) &&
-                        defaultStrings[unit.$.id] == unit.source[0]) {
-
-                        cultureStrings[unit.$.id] = unit.target[0]._;
+        if (stats) {
+            // parse the culture-specific xliff contents
+            var parser = new xml2js.Parser();
+            var xliff;
+            parser.parseString(
+                fs.readFileSync(xliffPath),
+                function (err, result) {
+                    if (err) {
+                        throw err;
                     }
+
+                    xliff = result;
+                });
+
+            // overlay the translated strings
+            for (var unit of xliff.xliff.file[0].body[0]['trans-unit']) {
+                if (unit.target[0].$.state == 'translated' &&
+                    defaultStrings.hasOwnProperty(unit.$.id) &&
+                    defaultStrings[unit.$.id] == unit.source[0]) {
+
+                    cultureStrings[unit.$.id] = unit.target[0]._;
                 }
-            });
+            }
+        }
 
         // write the culture-specific resjson file
         var resjsonPath = path.join(__dirname, 'Strings', 'resources.resjson', culture, 'resources.resjson');
         var resjsonContents = JSON.stringify(cultureStrings, null, 2);
+        tl.mkdirP(path.dirname(resjsonPath));
         fs.writeFileSync(resjsonPath, resjsonContents);
     }
 }
