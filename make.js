@@ -61,6 +61,11 @@ target.loc = function() {
     var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
     if (lib.messages) {
         for (var key of Object.keys(lib.messages)) {
+            // skip resjson-style comments for localizers
+            if (!key || key.match(/^_.+\.comment$/)) {
+                continue;
+            }
+
             defaultStrings[`loc.messages.${key}`] = lib.messages[key];
         }
     }
@@ -70,11 +75,6 @@ target.loc = function() {
         // initialize the culture-specific strings from the default strings
         var cultureStrings = { };
         for (var key of Object.keys(defaultStrings)) {
-            // skip resjson-style comments for localizers
-            if (!key || key.match(/^_.+\.comment$/)) {
-                continue;
-            }
-
             cultureStrings[key] = defaultStrings[key];
         }
 

@@ -5,7 +5,7 @@
       <trans-unit id="loc.messages.LIB_UnhandledEx">
         <source>Unhandled: %s</source>
         <target state="new">Unhandled: %s</target>
-        <note/>
+        <note>This is for the unhandled exception handler</note>
       </trans-unit>
       <trans-unit id="loc.messages.LIB_FailOnCode">
         <source>Failure return code: %d</source>
