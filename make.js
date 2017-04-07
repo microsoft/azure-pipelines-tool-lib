@@ -186,6 +186,10 @@ target.handoff = function() {
 
     // create or update the culture-specific xlf files
     for (var culture of cultures) {
+        if (culture.toUpperCase() == 'EN-US') {
+            continue;
+        }
+
         // test whether xliff file exists
         var xliffPath = path.join(__dirname, 'xliff', `${culture}.xlf`);
         var stats;
