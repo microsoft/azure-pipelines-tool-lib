@@ -246,7 +246,7 @@ target.handoff = function() {
         // create a map of trans-unit
         var unitMap = { };
         for (var unit of xliff.xliff.file[0].body[0]['trans-unit']) {
-            unitMap[unit.source[0]] = unit;
+            unitMap[unit['$'].id] = unit;
         }
 
         for (var key of Object.keys(defaultStrings)) {
@@ -272,16 +272,24 @@ target.handoff = function() {
                     ]
                 };
             }
-            // update the trans-unit
+            // update the source, target state, and note
             else if (unitMap[key].source[0] != defaultStrings[key]) {
-                unitMap[key].target = [
-                    {
-                        "$": {
-                            "state": "needs-translation"
-                        },
-                        "_": defaultStrings[key]
-                    }
+                unitMap[key].source = [
+                    defaultStrings[key]
                 ];
+                if (unitMap[key].target[0]['$'].state == 'new') {
+                    unitMap[key].target[0]['_'] = defaultStrings[key]
+                }
+                else {
+                    unitMap[key].target[0]['$'].state = "needs-translation";
+                }
+
+                unitMap[key].note = [
+                    (comments[key] || "")
+                ];
+            }
+            // update the note
+            else {
                 unitMap[key].note = [
                     (comments[key] || "")
                 ];
