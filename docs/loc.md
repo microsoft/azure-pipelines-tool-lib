@@ -1,7 +1,7 @@
 ﻿# Loc process
 
 ## XLIFF overview
-XLIFF is an open standard for translation database files. The file extension is .xlf. XLIFF files are the intermediate files used for handoff/handback. They are not included in the product layout. Ultimately resjson or resx is the end goal file type that is included in the product layout.
+XML Localization Interchange File Format ([XLIFF](http://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html)) is an open standard for translation database files. The file extension is .xlf. XLIFF files are the intermediate files used for handoff/handback. They are not included in the product layout. Ultimately resjson or resx is the end goal file type that is included in the product layout.
 
 XLIFF is an XML format. Each XLIFF file contains translation strings from one source language, to one target language. Multiple source files can be embedded in a single XLIFF file. The structure of an XLIFF file looks like:
 ```
@@ -37,7 +37,8 @@ The build process uses the checked-in xlf files to generate the satellite resjso
     {
         // load culture-specific xliff file
 
-        // overlay culture-specific strings where the ID matches, the source text matches, and the state is "translated"
+        // overlay culture-specific strings where the ID matches,
+        // the source text matches, and the state is "translated"
     }
 
     // write the culture-specific resjson file
