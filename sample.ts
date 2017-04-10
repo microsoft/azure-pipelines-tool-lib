@@ -1,21 +1,30 @@
 import * as toolLib from './tool';
+import * as taskLib from 'vsts-task-lib/task';
 import * as restm from 'typed-rest-client/RestClient';
 import * as os from 'os';
 import * as path from 'path';
 
 async function run() {
     try {
-        // explicit version
-        await getNode('6.10.0', false);
+        //
+        // Get an explicit version
+        //
+        await getNode('v5.10.1', false);
 
-        // query, filter and only LTS
-        await getNode('4.x', true);
+        //
+        // Query latest with a wildcard
+        //
+        await getNode('6.x', true);
 
-        // complex versionSpecs supported
-        // await getNode('9.x || >=4.7.0', true);
+        //
+        // Complex versionSpecs are supported.
+        //
+        // For example:
+        //      await getNode('9.x || >=4.7.0', true);
+        //
     }
     catch (error) {
-        console.error('ERR:' + error.message);
+        taskLib.setResult(taskLib.TaskResult.Failed, error.message);
     }
 }
 
@@ -25,153 +34,176 @@ async function run() {
 //
 interface INodeVersion {
     version: string,
-    lts: any,
     files: string[]
 }
 
 let osPlat: string = os.platform();
 let osArch: string = os.arch();
 
-async function getNode(versionSpec: string, onlyLTS: boolean) {
-    console.log();
+//
+// Basic pattern:
+//      if !checkLatest
+//          toolPath = check cache
+//      if !toolPath
+//          if version is a range
+//              match = query nodejs.org
+//              if !match
+//                  fail
+//              toolPath = check cache
+//          if !toolPath
+//              download, extract, and cache
+//              toolPath = cacheDir
+//      PATH = cacheDir + PATH
+//
+async function getNode(versionSpec: string, checkLatest: boolean) {
+    console.log('');
     console.log('--------------------------');
-    console.log(versionSpec);
+    console.log('SAMPLE: ' + versionSpec);
     console.log('--------------------------');
 
-    //
-    // Basic pattern:
-    //     version = find and evaluate local versions
-    //          use latest match 
-    //     if version not found locally
-    //          // let's query
-    //          if versionSpec is explicit version
-    //               versionToGet = versionSpec
-    //          else
-    //               versionToGet = query and evaluate internet tool provider
-    //          
-    //          download versionToGet
-    //          Extract or move to cache download
-    //
-    //      find tool path by version
-    //      prepend $PATH with toolpath
-    //
-
-    //
-    // Let's try and resolve the versions spec locally first
-    //
-    let localVersions: string[] = toolLib.findLocalToolVersions('node');
-    let version: string = toolLib.evaluateVersions(localVersions, versionSpec);
-
-    if (version) {
-        console.log('Tool version resolved locally: ' + version);
+    if (toolLib.isExplicitVersion(versionSpec)) {
+        checkLatest = false; // check latest doesn't make sense when explicit version
     }
-    else {
+
+    let toolPath: string;
+    if (!checkLatest) {
         //
-        // Let's query and resolve the latest version for the versionSpec
-        // If the version is an explicit version (1.1.1 or v1.1.1) then no need to query
-        // If your tool doesn't offer a mechanism to query, 
-        // then it can only support exact version inputs        
+        // Let's try and resolve the version spec locally first
         //
+        toolPath = toolLib.findLocalTool('node', versionSpec);
+    }
+
+    if (!toolPath) {
+        let version: string;
         if (toolLib.isExplicitVersion(versionSpec)) {
-            // given exact version to get
-            toolLib.debug('explicit match ' + versionSpec);
+            //
+            // Explicit version was specified. No need to query for list of versions.
+            //
             version = versionSpec;
         }
         else {
-            // let's query for version
-            let versions: string[] = [];
-
-            // hopefully your tool supports an easy way to get a version list.
-            // node offers a json list of versions
-            let dataFileName: string;
-            switch (osPlat) {
-                case "linux": dataFileName = "linux-" + osArch; break;
-                case "darwin": dataFileName = "osx-" + osArch + '-tar'; break;
-                case "win32": dataFileName = "win-" + osArch; break;
+            //
+            // Let's query and resolve the latest version for the versionSpec.
+            // If the version is an explicit version (1.1.1 or v1.1.1) then no need to query.
+            // If your tool doesn't offer a mechanism to query, 
+            // then it can only support exact version inputs.
+            //
+            version = await queryLatestMatch(versionSpec);
+            if (!version) {
+                throw new Error(`Unable to find Node version '${versionSpec}' for platform ${osPlat} and architecture ${osArch}.`);
             }
 
-            let dataUrl = "https://nodejs.org/dist/index.json";
-            let ltsMap : {[version: string]: string} = {};
-            let rest: restm.RestClient = new restm.RestClient('tool-sample');
-            let nodeVersions: INodeVersion[] = (await rest.get<INodeVersion[]>(dataUrl)).result;
-            nodeVersions.forEach((nodeVersion:INodeVersion) => {
-                // ensure this version supports your os and platform
-                let compatible: boolean = nodeVersion.files.indexOf(dataFileName) >= 0;
-
-                if (compatible) {
-                    if (!onlyLTS || (nodeVersion.lts && onlyLTS)) {
-                        versions.push(nodeVersion.version);
-                    }
-                    
-                    if (nodeVersion.lts) {
-                        ltsMap[nodeVersion.version] = nodeVersion.lts;
-                    }
-                }
-            });
-
             //
-            // get the latest version that matches the version spec
+            // Check the cache for the resolved version.
             //
-            version = toolLib.evaluateVersions(versions, versionSpec);
-            toolLib.debug('version from index.json ' + version);
-            toolLib.debug('isLTS:' + ltsMap[version]);
-
-            //
-            // If there is no data driven way to get versions supported,
-            // a last option is to tool.scrape() with a regex
-            //
-            let scrapeUrl = 'https://nodejs.org/dist/';
-            let re: RegExp = /v(\d+\.)(\d+\.)(\d+)/g;
-            versions = await toolLib.scrape(scrapeUrl, re);
-
-            version = toolLib.evaluateVersions(versions, versionSpec);
-            if (!version) {
-                throw new Error('Could not satisfy version range ' + versionSpec);
-            }            
+            toolPath = toolLib.findLocalTool('node', version)
         }
 
-        //
-        // Download and Install
-        //
-        toolLib.debug('download ' + version);
-
-        // a tool installer intimately knows how to get that tools (and construct urls)
-        let fileName: string = osPlat == 'win32'? 'node-v' + version + '-win-' + os.arch() :
-                                            'node-v' + version + '-' + osPlat + '-' + os.arch();  
-        let urlFileName: string = osPlat == 'win32'? fileName + '.7z':
-                                                     fileName + '.tar.gz';  
-
-        let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + urlFileName; 
-
-        let downloadPath: string = await toolLib.downloadTool(downloadUrl);
-
-        //
-        // Extract the tar and install it into the local tool cache
-        //
-        let extPath = await toolLib.extractTar(downloadPath);
-
-        // node extracts with a root folder that matches the fileName downloaded
-        let toolRoot = path.join(extPath, fileName);
-        
-        toolLib.cacheDir(toolRoot, 'node', version);
+        if (!toolPath) {
+            //
+            // Download, extract, cache
+            //
+            toolPath = await acquireNode(version);
+        }
     }
 
-    console.log('using version: ' + version);
-
     //
-    // a tool installer initimately knows details about the layout of that tool
-    // for example, node binary is in the bin folder after the extract.
+    // A tool installer initimately knows details about the layout of that tool
+    // for example, node binary is in the bin folder after the extract on Mac/Linux.
     // layouts could change by version, by platform etc... but that's the tool installers job
-    //    
-    let toolPath: string = toolLib.findLocalTool('node', version);    
-    toolPath = path.join(toolPath, 'bin');
-    console.log('using tool path: ' + toolPath);
+    //
+    if (osPlat != 'win32') {
+        toolPath = path.join(toolPath, 'bin');
+    }
 
     //
-    // prepend the tools path. instructs the agent to prepend for future tasks
+    // Prepend the tools path. This prepends the PATH for the current process and
+    // instructs the agent to prepend for each task that follows.
     //
     toolLib.prependPath(toolPath);
-    console.log();
+}
+
+async function queryLatestMatch(versionSpec: string): Promise<string> {
+    //
+    // Hopefully your tool supports an easy way to get a version list.
+    // Node offers a json list of versions.
+    //
+    let dataFileName: string;
+    switch (osPlat) {
+        case "linux": dataFileName = "linux-" + osArch; break;
+        case "darwin": dataFileName = "osx-" + osArch + '-tar'; break;
+        case "win32": dataFileName = "win-" + osArch + '-exe'; break;
+        default: throw new Error(`Unexpected OS '${osPlat}'`);
+    }
+
+    let versions: string[] = [];
+    let dataUrl = "https://nodejs.org/dist/index.json";
+    let rest: restm.RestClient = new restm.RestClient('vsts-node-tool');
+    let nodeVersions: INodeVersion[] = (await rest.get<INodeVersion[]>(dataUrl)).result;
+    nodeVersions.forEach((nodeVersion:INodeVersion) => {
+        //
+        // Ensure this version supports your os and platform.
+        //
+        if (nodeVersion.files.indexOf(dataFileName) >= 0) {
+            versions.push(nodeVersion.version);
+        }
+    });
+
+    //
+    // If there is no data driven way to get versions supported,
+    // a last option is to tool.scrape() with a regex.
+    //
+    // For example:
+    //      let scrapeUrl = 'https://nodejs.org/dist/';
+    //      let re: RegExp = /v(\d+\.)(\d+\.)(\d+)/g;
+    //      versions = await toolLib.scrape(scrapeUrl, re);
+    //
+
+    //
+    // Get the latest version that matches the version spec.
+    //
+    let version: string = toolLib.evaluateVersions(versions, versionSpec);
+
+    return version;
+}
+
+async function acquireNode(version: string): Promise<string> {
+    //
+    // Download - a tool installer intimately knows how to get the tool (and construct urls)
+    //
+    version = toolLib.cleanVersion(version);
+    let fileName: string = osPlat == 'win32'? 'node-v' + version + '-win-' + os.arch() :
+                                                'node-v' + version + '-' + osPlat + '-' + os.arch();  
+    let urlFileName: string = osPlat == 'win32'? fileName + '.7z':
+                                                    fileName + '.tar.gz';  
+
+    let downloadUrl = 'https://nodejs.org/dist/v' + version + '/' + urlFileName;
+
+    let downloadPath: string = await toolLib.downloadTool(downloadUrl);
+
+    //
+    // Extract
+    //
+    let extPath: string;
+    if (osPlat == 'win32') {
+        taskLib.assertAgent('2.115.0');
+        extPath = taskLib.getVariable('Agent.TempDirectory');
+        if (!extPath) {
+            throw new Error('Expected Agent.TempDirectory to be set');
+        }
+
+        extPath = path.join(extPath, 'n'); // use as short a path as possible due to nested node_modules folders
+        extPath = await toolLib.extract7z(downloadPath, extPath);
+    }
+    else {
+        extPath = await toolLib.extractTar(downloadPath);
+    }
+
+    //
+    // Install into the local tool cache - node extracts with a root folder that matches the fileName downloaded
+    //
+    let toolRoot = path.join(extPath, fileName);
+    return await toolLib.cacheDir(toolRoot, 'node', version);
 }
 
 run();
