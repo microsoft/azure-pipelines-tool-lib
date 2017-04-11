@@ -1,31 +1,69 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff version="1.2">
-  <file original="lib.json" source-language="en-US" target-language="ko-KR" datatype="plaintext">
+  <file original="lib.json" source-language="en-US" target-language="ko" datatype="plaintext" build-num="1425299674">
+    <header>
+      <count-group name="BlackBox wordcount">
+        <count count-type="x-wordCount">23</count>
+        <count count-type="x-adjWordCount">19.55</count>
+        <count count-type="x-curAdjWordCount">19.55</count>
+        <count count-type="x-repeatAdjWordCount">0</count>
+        <count count-type="x-termWordCount">0</count>
+      </count-group>
+      <count-group name="BlackBox wordcount analysis">
+        <count count-type="x-match102%">0</count>
+        <count count-type="x-match101%">0</count>
+        <count count-type="x-match100%">0</count>
+        <count count-type="x-match99-90%">0</count>
+        <count count-type="x-match89-75%">0</count>
+        <count count-type="x-mt">23</count>
+        <count count-type="repetition">0</count>
+      </count-group>
+    </header>
     <body>
-      <trans-unit id="loc.messages.TOOL_LIB_CachingTool">
+      <trans-unit xmlns="" id="loc.messages.TOOL_LIB_CachingTool">
         <source>Caching tool: %s %s %s</source>
-        <target state="new">Caching tool: %s %s %s</target>
+        <target state="translated">도구를 캐시하는 중: %s %s %s</target>
         <note>This informational log message indicates that a tool, that was just downloaded, is being copied into the cache directory. %s %s %s represent the tool name, version information, and processor architecture.</note>
+        <alt-trans match-quality="100%" tool="BlackBox/MSR MT">
+          <target state-qualifier="mt-suggestion">캐싱 도구: %s% s %s</target>
+        </alt-trans>
+        <note from="bb-metadata">fuzzyMatch="15" wordcount="5" adjWordcount="4.25" curWordcount="4.25"</note>
       </trans-unit>
-      <trans-unit id="loc.messages.TOOL_LIB_Downloading">
+      <trans-unit xmlns="" id="loc.messages.TOOL_LIB_Downloading">
         <source>Downloading: %s</source>
-        <target state="new">Downloading: %s</target>
+        <target state="translated">다운로드 중: %s</target>
         <note>This information log message indicates that a file is being downloaded. %s represents the URL being downloaded.</note>
+        <alt-trans match-quality="100%" tool="BlackBox/MSR MT">
+          <target state-qualifier="mt-suggestion">다운로드: %s</target>
+        </alt-trans>
+        <note from="bb-metadata">fuzzyMatch="15" wordcount="2" adjWordcount="1.7" curWordcount="1.7"</note>
       </trans-unit>
-      <trans-unit id="loc.messages.TOOL_LIB_ExtractingArchive">
+      <trans-unit xmlns="" id="loc.messages.TOOL_LIB_ExtractingArchive">
         <source>Extracting archive</source>
-        <target state="new">Extracting archive</target>
+        <target state="translated">보관 파일의 압축을 푸는 중</target>
         <note>This informational log message indicates that an archive file is being extracted. For example, a .zip file, .7z file, or .tar.gz file.</note>
+        <alt-trans match-quality="100%" tool="BlackBox/MSR MT">
+          <target state-qualifier="mt-suggestion">아카이브를 추출합니다.</target>
+        </alt-trans>
+        <note from="bb-metadata">fuzzyMatch="15" wordcount="2" adjWordcount="1.7" curWordcount="1.7"</note>
       </trans-unit>
-      <trans-unit id="loc.messages.TOOL_LIB_FoundInCache">
+      <trans-unit xmlns="" id="loc.messages.TOOL_LIB_FoundInCache">
         <source>Found tool in cache: %s %s %s</source>
-        <target state="new">Found tool in cache: %s %s %s</target>
+        <target state="translated">캐시에서 도구 발견: %s %s %s</target>
         <note>This informational log message indicates that the request tool is already cached, and does not need to be downloaded again. %s %s %s represent the tool name, version information, and processor architecture.</note>
+        <alt-trans match-quality="100%" tool="BlackBox/MSR MT">
+          <target state-qualifier="mt-suggestion">캐시에서 도구 발견: %s% s %s</target>
+        </alt-trans>
+        <note from="bb-metadata">fuzzyMatch="15" wordcount="7" adjWordcount="5.95" curWordcount="5.95"</note>
       </trans-unit>
-      <trans-unit id="loc.messages.TOOL_LIB_PrependPath">
+      <trans-unit xmlns="" id="loc.messages.TOOL_LIB_PrependPath">
         <source>Prepending PATH environment variable with directory: %s</source>
-        <target state="new">Prepending PATH environment variable with directory: %s</target>
+        <target state="translated">PATH 환경 변수 앞에 %s 디렉터리 추가</target>
         <note>This informational log message indicates that a directory is being prepended to the front of the PATH environment variable. The directories specified by the PATH environment variable are used to resolve the location of command line tools.</note>
+        <alt-trans match-quality="100%" tool="BlackBox/MSR MT">
+          <target state-qualifier="mt-suggestion">디렉터리와 PATH 환경 변수를 앞에 추가: %s</target>
+        </alt-trans>
+        <note from="bb-metadata">fuzzyMatch="15" wordcount="7" adjWordcount="5.95" curWordcount="5.95"</note>
       </trans-unit>
     </body>
   </file>
