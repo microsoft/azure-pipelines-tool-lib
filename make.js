@@ -163,33 +163,32 @@ target.sample = function() {
 }
 
 target.handoff = function() {
-    // create a key->value map of default strings
-    var defaultStrings = { };
-    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
-    if (lib.messages) {
-        for (var key of Object.keys(lib.messages)) {
-            // skip resjson-style comments for localizers
-            if (!key || key.match(/^_.+\.comment$/)) {
-                continue;
-            }
-
-            defaultStrings[`loc.messages.${key}`] = lib.messages[key];
-        }
-    }
-
-    // create a key->value map of comments for localizers
+    // create a key->value map of default strings and comments for localizers
     //
-    // resjson-style comments for localizers:
+    // resjson-style resources:
     //   "greeting": "Hello",
     //   "_greeting.comment": "A welcome greeting.",
     //
     // for more details about resjson: https://msdn.microsoft.com/en-us/library/windows/apps/hh465254.aspx
+    var defaultStrings = { };
     var comments = { };
+    var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
     if (lib.messages) {
-        for (var commentKey of Object.keys(lib.messages)) {
-            if (commentKey && commentKey.match(/^_.+\.comment$/)) {
-                valueKey = commentKey.substr('_'.length, commentKey.length - '_.comment'.length);
+        for (var key of Object.keys(lib.messages)) {
+            if (!key) {
+                throw new Error('key cannot be empty: lib.messages.<key>');
+            }
+
+            if (key.match(/^_.+\.comment$/)) {
+                let commentKey = key;
+                let valueKey = commentKey.substr(   // trim leading "_"
+                    '_'.length,                     // trim trailing ".comment"
+                    commentKey.length - '_.comment'.length);
                 comments[`loc.messages.${valueKey}`] = lib.messages[commentKey];
+                continue;
+            }
+            else {
+                defaultStrings[`loc.messages.${key}`] = lib.messages[key];
             }
         }
     }
@@ -276,9 +275,6 @@ target.handoff = function() {
                             },
                             "_": defaultStrings[key]
                         }
-                    ],
-                    "note": [
-                        (comments[key] || "")
                     ]
                 };
             }
@@ -293,17 +289,12 @@ target.handoff = function() {
                 else {
                     unitMap[key].target[0]['$'].state = "needs-translation";
                 }
+            }
 
-                unitMap[key].note = [
-                    (comments[key] || "")
-                ];
-            }
-            // update the note
-            else {
-                unitMap[key].note = [
-                    (comments[key] || "")
-                ];
-            }
+            // always update the note
+            unitMap[key].note = [
+                (comments[key] || "")
+            ];
         }
 
         for (var key of Object.keys(unitMap)) {
