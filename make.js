@@ -273,7 +273,7 @@ target.handoff = function() {
                             "$": {
                                 "state": "new"
                             },
-                            "_": defaultStrings[key]
+                            "_": ""
                         }
                     ]
                 };
@@ -283,10 +283,7 @@ target.handoff = function() {
                 unitMap[key].source = [
                     defaultStrings[key]
                 ];
-                if (unitMap[key].target[0]['$'].state == 'new') {
-                    unitMap[key].target[0]['_'] = defaultStrings[key]
-                }
-                else {
+                if (unitMap[key].target[0]['$'].state != 'new') {
                     unitMap[key].target[0]['$'].state = "needs-translation";
                 }
             }
