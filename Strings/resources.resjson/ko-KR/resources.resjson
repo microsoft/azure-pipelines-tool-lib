@@ -1,7 +1,7 @@
 {
-  "loc.messages.TOOL_LIB_CachingTool": "Caching tool: %s %s %s",
-  "loc.messages.TOOL_LIB_Downloading": "Downloading: %s",
-  "loc.messages.TOOL_LIB_ExtractingArchive": "Extracting archive",
-  "loc.messages.TOOL_LIB_FoundInCache": "Found tool in cache: %s %s %s",
-  "loc.messages.TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s"
+  "loc.messages.TOOL_LIB_CachingTool": "도구를 캐시하는 중: %s %s %s",
+  "loc.messages.TOOL_LIB_Downloading": "다운로드 중: %s",
+  "loc.messages.TOOL_LIB_ExtractingArchive": "보관 파일의 압축을 푸는 중",
+  "loc.messages.TOOL_LIB_FoundInCache": "캐시에서 도구 발견: %s %s %s",
+  "loc.messages.TOOL_LIB_PrependPath": "PATH 환경 변수 앞에 %s 디렉터리 추가"
 }
