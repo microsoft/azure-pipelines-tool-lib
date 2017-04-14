@@ -303,7 +303,7 @@ target.handoff = function() {
 
         // update the body of the xliff object
         xliff.xliff.file[0].body[0]['trans-unit'] = [ ];
-        for (var key of Object.keys(unitMap)) {
+        for (var key of Object.keys(unitMap).sort()) {
             xliff.xliff.file[0].body[0]['trans-unit'].push(unitMap[key]);
         }
 
