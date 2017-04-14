@@ -319,12 +319,12 @@ target.handoff = function() {
             },
             "xmldec": {
                 "version": "1.0",
-                "encoding": "UTF-8"
+                "encoding": "utf-8"
             }
         };
         var builder = new xml2js.Builder(options);
         var xml = builder.buildObject(xliff);
         mkdir('-p', path.dirname(xliffPath));
-        fs.writeFileSync(xliffPath, xml);
+        fs.writeFileSync(xliffPath, '\ufeff' + xml);
     }
 }
