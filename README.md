@@ -4,6 +4,8 @@ Tool installer tasks SDK for [Visual Studio Team Services](https://www.visualstu
 
 [Tool Installer Task Overview: Read Here](docs/overview.md).
 
+[Demo Video: Here](https://youtu.be/Ie8EuvqJ0Hg)
+
 Sample of tool api usage is [here](sample.ts)
 
 In development.  Preview installer tasks soon.
