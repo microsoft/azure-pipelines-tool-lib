@@ -38,6 +38,19 @@ describe('Tool Tests', function () {
         tl.mkdirP(tempPath);
     })
 
+    if (process.env['TF_BUILD']) {
+        // this test verifies the expected version of node is being used to run the tests.
+        // 5.10.1 is what ships in the 1.x and 2.x agent.
+        it('is expected version', (done: MochaDone) => {
+            this.timeout(1000);
+
+            console.log('node version: ' + process.version);
+            assert(process.version != 'v5.10.1' && process.version != 'v6.10.3', 'expected node v5.10.1 or v6.10.3. actual: ' + process.version);
+
+            done();
+        });
+    }
+
     it('downloads a 100 byte file', function () {
         this.timeout(5000);
 
