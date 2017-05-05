@@ -141,12 +141,12 @@ target.sample = function() {
     process.env['AGENT_VERSION'] = '2.115.0';
 
     // creating a cache dir in the build dir.  agent would do this
-    let cacheDir = path.join(process.cwd(), 'CACHE');
+    var cacheDir = path.join(process.cwd(), 'CACHE');
     process.env['AGENT_TOOLSDIRECTORY'] = cacheDir;
     tl.mkdirP(cacheDir);
 
     // redirecting TEMP (agent would do this per build)
-    let tempDir = path.join(process.cwd(), 'TEMP');
+    var tempDir = path.join(process.cwd(), 'TEMP');
     tl.mkdirP(tempDir);
     process.env['AGENT_TEMPDIRECTORY'] = tempDir;
     if (os.platform() == 'win32') {
@@ -180,8 +180,8 @@ target.handoff = function() {
             }
 
             if (key.match(/^_.+\.comment$/)) {
-                let commentKey = key;
-                let valueKey = commentKey.substr(   // trim leading "_"
+                var commentKey = key;
+                var valueKey = commentKey.substr(   // trim leading "_"
                     '_'.length,                     // trim trailing ".comment"
                     commentKey.length - '_.comment'.length);
                 comments[`loc.messages.${valueKey}`] = lib.messages[commentKey];
