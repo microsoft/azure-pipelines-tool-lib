@@ -3,8 +3,8 @@ import path = require('path');
 import fs = require('fs');
 import shell = require('shelljs');
 import os = require('os');
-import mocha = require('mocha');
 
+import * as mocha from 'mocha';
 import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
