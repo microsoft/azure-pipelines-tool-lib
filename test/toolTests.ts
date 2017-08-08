@@ -68,6 +68,35 @@ mocha.describe('Tool Tests', function () {
         });
     });
 
+    mocha.it('has status code in exception dictionary for non 200 response', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let nonExistentUrl: string = "http://httpbin.org/nonexistent";
+                let downPath: string = await toolLib.downloadTool(nonExistentUrl);
+
+                reject('a file was downloaded but it shouldnt have been');
+            } 
+            catch (err){
+                let statusCodeExists: boolean = false;
+
+                for (let errorKey of Object.keys(err))
+                {
+                    if (errorKey == 'httpStatusCode')
+                    {
+                        statusCodeExists = true;
+                        break;
+                    }
+                }
+
+                assert(statusCodeExists != false, 'status code exists');
+
+                resolve();
+            }
+        });
+    });
+
     mocha.it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
