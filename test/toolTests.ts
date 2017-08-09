@@ -10,21 +10,12 @@ import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
 
-let cachePath = path.join(__dirname, 'CACHE');
-let tempPath = path.join(__dirname, 'TEMP');
+let cachePath = path.join(process.cwd(), 'CACHE');
+let tempPath = path.join(process.cwd(), 'TEMP');
 
 describe('Tool Tests', function () {
-    before(function (done) {
-        try {
-            process.env['AGENT_TEMPDIRECTORY'] = tempPath;
-            process.env['AGENT_TOOLSDIRECTORY'] = cachePath;
-            process.env['AGENT_VERSION'] = '2.115.0';
-            toolLib.debug('initializing tests');
-        }
-        catch (err) {
-            assert.fail('cannnot init', 'init', 'Failed to initialize: ' + err.message, 'init');
-        }
-        done();
+    before(function () {
+
     });
 
     after(function () {
@@ -54,16 +45,16 @@ describe('Tool Tests', function () {
     it('downloads a 100 byte file', function () {
         this.timeout(5000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 toolLib.debug('downloaded path: ' + downPath);
-                
+
                 assert(tl.exist(downPath), 'downloaded file exists');
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
@@ -72,11 +63,11 @@ describe('Tool Tests', function () {
     it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 toolLib.debug('downloaded path: ' + downPath);
-                
+
                 assert(tl.exist(downPath), 'downloaded file exists');
 
                 await toolLib.cacheFile(downPath, 'foo', 'foo', '1.1.0');
@@ -89,49 +80,49 @@ describe('Tool Tests', function () {
                 assert(tl.exist(binaryPath), 'binary should exist');
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
     });
 
-if (process.platform == 'win32') {
-    it('installs a 7z and finds it', function () {
-        this.timeout(2000);
+    if (process.platform == 'win32') {
+        it('installs a 7z and finds it', function () {
+            this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
-            try {
-                let tempDir = path.join(__dirname, 'test-install-7z');
-                tl.mkdirP(tempDir);
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    let tempDir = path.join(__dirname, 'test-install-7z');
+                    tl.mkdirP(tempDir);
 
-                // copy the 7z file to the test dir
-                let _7zFile: string = path.join(tempDir, 'test.7z');
-                tl.cp(path.join(__dirname, 'data', 'test.7z'), _7zFile);
+                    // copy the 7z file to the test dir
+                    let _7zFile: string = path.join(tempDir, 'test.7z');
+                    tl.cp(path.join(__dirname, 'data', 'test.7z'), _7zFile);
 
-                // extract/cache
-                let extPath: string = await toolLib.extract7z(_7zFile);
-                toolLib.cacheDir(extPath, 'my-7z-contents', '1.1.0');
-                let toolPath: string = toolLib.findLocalTool('my-7z-contents', '1.1.0');
+                    // extract/cache
+                    let extPath: string = await toolLib.extract7z(_7zFile);
+                    toolLib.cacheDir(extPath, 'my-7z-contents', '1.1.0');
+                    let toolPath: string = toolLib.findLocalTool('my-7z-contents', '1.1.0');
 
-                assert(tl.exist(toolPath), 'found tool exists');
-                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
-                assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
-                assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
-                assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+                    assert(tl.exist(toolPath), 'found tool exists');
+                    assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
+                    assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
+                    assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
+                    assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
 
-                resolve();
-            }
-            catch(err) {
-                reject(err);
-            }
+                    resolve();
+                }
+                catch (err) {
+                    reject(err);
+                }
+            });
         });
-    });
-}
+    }
 
     it('installs a zip and finds it', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let tempDir = path.join(__dirname, 'test-install-zip');
                 tl.mkdirP(tempDir);
@@ -172,7 +163,7 @@ if (process.platform == 'win32') {
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
@@ -181,11 +172,11 @@ if (process.platform == 'win32') {
     it('finds and evaluates local tool version', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
                 let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                
+
                 toolLib.cacheFile(downPath1_1, 'foo', 'foo', '1.1.0');
                 toolLib.cacheFile(downPath1_2, 'foo', 'foo', '1.2.0');
 
@@ -193,13 +184,13 @@ if (process.platform == 'win32') {
                 assert(versions.length == 2, 'should have found two versions');
                 assert(versions.indexOf('1.1.0') >= 0, 'should have 1.1.0');
                 assert(versions.indexOf('1.2.0') >= 0, 'should have 1.2.0');
-                
+
                 let latest = toolLib.evaluateVersions(versions, '1.x');
                 assert(latest === '1.2.0');
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
@@ -208,7 +199,7 @@ if (process.platform == 'win32') {
     it('evaluates major match (1.x)', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let versions: string[] = ['1.0.0', '1.1.0', '2.0.0'];
                 let latest = toolLib.evaluateVersions(versions, '1.x');
@@ -216,7 +207,7 @@ if (process.platform == 'win32') {
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
@@ -225,7 +216,7 @@ if (process.platform == 'win32') {
     it('evaluates greater than or equal (>=4.1)', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let versions: string[] = ['4.0.0', '4.1.0', '4.1.1', '5.0.0'];
                 let latest = toolLib.evaluateVersions(versions, '>=4.1');
@@ -233,7 +224,7 @@ if (process.platform == 'win32') {
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
@@ -242,7 +233,7 @@ if (process.platform == 'win32') {
     it('prepends path', function () {
         this.timeout(2000);
 
-        return new Promise<void>(async(resolve, reject)=> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 let testDir: string = path.join(__dirname);
                 toolLib.prependPath(testDir);
@@ -252,7 +243,7 @@ if (process.platform == 'win32') {
 
                 resolve();
             }
-            catch(err) {
+            catch (err) {
                 reject(err);
             }
         });
