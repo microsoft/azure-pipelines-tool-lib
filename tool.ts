@@ -1,5 +1,5 @@
-import * as restm from 'typed-rest-client/RestClient';
 import * as httpm from 'typed-rest-client/HttpClient';
+import * as ifm from 'typed-rest-client/Interfaces';
 import * as path from 'path';
 import * as os from 'os';
 import * as process from 'process';
@@ -14,7 +14,11 @@ declare let rest;
 
 let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
-let http: httpm.HttpClient = new httpm.HttpClient(userAgent);
+let requestOptions = {
+    // ignoreSslError: true,
+    proxy: tl.getHttpProxyConfiguration()
+} as ifm.IRequestOptions;
+let http: httpm.HttpClient = new httpm.HttpClient(userAgent, null, requestOptions);
 tl.setResourcePath(path.join(__dirname, 'lib.json'));
 
 export function debug(message: string): void {
@@ -152,15 +156,15 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
  * @param arch      optional arch.  defaults to arch of computer
  */
 export function findLocalToolVersions(toolName: string, arch?: string) {
-   let versions: string[] = [];
+    let versions: string[] = [];
 
-   arch = arch || os.arch();
-   let toolPath = path.join(_getCacheRoot(), toolName);
+    arch = arch || os.arch();
+    let toolPath = path.join(_getCacheRoot(), toolName);
 
-   if (tl.exist(toolPath)) {
+    if (tl.exist(toolPath)) {
         let children: string[] = tl.ls('', [toolPath]);
         children.forEach((child: string) => {
-            
+
             if (isExplicitVersion(child)) {
                 let fullPath = path.join(toolPath, child, arch);
                 if (tl.exist(fullPath) && tl.exist(`${fullPath}.complete`)) {
@@ -168,9 +172,9 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
                 }
             }
         });
-   }
+    }
 
-   return versions; 
+    return versions;
 }
 
 //---------------------
@@ -188,7 +192,7 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * @param url       url of tool to download
  * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability)
  */
-export async function downloadTool(url: string, fileName?:string): Promise<string> {
+export async function downloadTool(url: string, fileName?: string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             tl.debug(fileName);
@@ -205,12 +209,12 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
             // TODO: retries
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
-            file.on('open', async(fd) => {
+            file.on('open', async (fd) => {
                 try {
                     tl.debug('downloading');
                     let response: httpm.HttpClientResponse = await http.get(url);
                     if (response.message.statusCode != 200) {
-                        throw(new Error('Unexpected HTTP response: ' + response.message.statusCode));
+                        throw (new Error('Unexpected HTTP response: ' + response.message.statusCode));
                     }
 
                     let stream = response.message.pipe(file);
@@ -236,7 +240,7 @@ export async function downloadTool(url: string, fileName?:string): Promise<strin
 //---------------------
 // Install Functions
 //---------------------
-function _createToolPath(tool:string, version: string, arch?: string): string {
+function _createToolPath(tool: string, version: string, arch?: string): string {
     // todo: add test for clean
     let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
     tl.debug('destination ' + folderPath);
@@ -247,7 +251,7 @@ function _createToolPath(tool:string, version: string, arch?: string): string {
     return folderPath;
 }
 
-function _completeToolPath(tool:string, version: string, arch?: string): void {
+function _completeToolPath(tool: string, version: string, arch?: string): void {
     let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
     let markerPath: string = `${folderPath}.complete`;
     tl.writeFile(markerPath, '');
@@ -263,9 +267,9 @@ function _completeToolPath(tool:string, version: string, arch?: string): void {
  * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
  */
 export async function cacheDir(sourceDir: string,
-                               tool: string,
-                               version: string,
-                               arch?: string): Promise<string> {
+    tool: string,
+    version: string,
+    arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
     console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
@@ -302,10 +306,10 @@ export async function cacheDir(sourceDir: string,
  * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
  */
 export async function cacheFile(sourceFile: string,
-                                targetFile: string,
-                                tool: string,
-                                version: string,
-                                arch?: string): Promise<string> {
+    targetFile: string,
+    tool: string,
+    version: string,
+    arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
     console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
@@ -344,7 +348,7 @@ export async function extract7z(file: string, dest?: string): Promise<string> {
     }
 
     console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
-    dest =  _createExtractFolder(dest);
+    dest = _createExtractFolder(dest);
 
     let originalCwd = process.cwd();
     try {
@@ -391,9 +395,9 @@ export async function extractTar(file: string): Promise<string> {
     console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
     let dest = _createExtractFolder();
 
-    let tr:trm.ToolRunner = tl.tool('tar');
+    let tr: trm.ToolRunner = tl.tool('tar');
     tr.arg(['xzC', dest, '-f', file]);
-    
+
     await tr.exec();
     return dest;
 }
@@ -460,13 +464,13 @@ export async function scrape(url: string, regex: RegExp): Promise<string[]> {
     let output: string = await (await http.get(url)).readBody();
 
     let matches = output.match(regex);
-    
+
     let seen: any = {};
     let versions: string[] = [];
-    for (let i=0; i < matches.length; i++) {
+    for (let i = 0; i < matches.length; i++) {
         let ver: string = semver.clean(matches[i]);
         if (!seen.hasOwnProperty(ver)) {
-            seen[ver]=true;
+            seen[ver] = true;
             versions.push(ver);
         }
     }
