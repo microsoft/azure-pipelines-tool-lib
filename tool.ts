@@ -209,6 +209,9 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 destPath = path.join(_getAgentTemp(), fileName);
             }
 
+            // make sure that the folder exists
+            tl.mkdirP(path.dirname(destPath));
+
             console.log(tl.loc('TOOL_LIB_Downloading', url));
             tl.debug('destination ' + destPath);
 

@@ -101,18 +101,7 @@ describe('Tool Tests', function () {
                 reject('a file was downloaded but it shouldnt have been');
             } 
             catch (err){
-                let statusCodeExists: boolean = false;
-
-                for (let errorKey of Object.keys(err))
-                {
-                    if (errorKey == 'httpStatusCode')
-                    {
-                        statusCodeExists = true;
-                        break;
-                    }
-                }
-
-                assert(statusCodeExists != false, 'status code exists');
+                assert.equal(err['httpStatusCode'], 404, 'status code exists');
 
                 resolve();
             }
