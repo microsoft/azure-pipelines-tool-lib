@@ -190,14 +190,24 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * Download a tool from an url and stream it into a file
  * 
  * @param url       url of tool to download
- * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability)
+ * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  */
 export async function downloadTool(url: string, fileName?: string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             tl.debug(fileName);
             fileName = fileName || uuidV4();
-            var destPath = path.join(_getAgentTemp(), fileName);
+
+            // check if it's an absolute path already
+            var destPath: string;
+            if(path.isAbsolute(fileName))
+            {
+                destPath = fileName;
+            }
+            else
+            {
+                destPath = path.join(_getAgentTemp(), fileName);
+            }
 
             console.log(tl.loc('TOOL_LIB_Downloading', url));
             tl.debug('destination ' + destPath);

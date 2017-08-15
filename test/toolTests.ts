@@ -5,6 +5,7 @@ import shell = require('shelljs');
 import os = require('os');
 
 import * as mocha from 'mocha';
+process.env['AGENT_VERSION'] = '2.115.0';
 import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
@@ -12,8 +13,8 @@ import * as toolLib from '../_build/tool';
 let cachePath = path.join(__dirname, 'CACHE');
 let tempPath = path.join(__dirname, 'TEMP');
 
-mocha.describe('Tool Tests', function () {
-    mocha.before(function (done) {
+describe('Tool Tests', function () {
+    before(function (done) {
         try {
             process.env['AGENT_TEMPDIRECTORY'] = tempPath;
             process.env['AGENT_TOOLSDIRECTORY'] = cachePath;
@@ -26,11 +27,11 @@ mocha.describe('Tool Tests', function () {
         done();
     });
 
-    mocha.after(function () {
+    after(function () {
 
     });
 
-    mocha.beforeEach(function () {
+    beforeEach(function () {
         tl.rmRF(cachePath);
         tl.rmRF(tempPath);
         tl.mkdirP(cachePath);
@@ -40,7 +41,7 @@ mocha.describe('Tool Tests', function () {
     if (process.env['TF_BUILD']) {
         // this test verifies the expected version of node is being used to run the tests.
         // 5.10.1 is what ships in the 1.x and 2.x agent.
-        mocha.it('is expected version', (done: mocha.MochaDone) => {
+        it('is expected version', (done: MochaDone) => {
             this.timeout(1000);
 
             console.log('node version: ' + process.version);
@@ -50,7 +51,7 @@ mocha.describe('Tool Tests', function () {
         });
     }
 
-    mocha.it('downloads a 100 byte file', function () {
+    it('downloads a 100 byte file', function () {
         this.timeout(5000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -68,7 +69,28 @@ mocha.describe('Tool Tests', function () {
         });
     });
 
-    mocha.it('has status code in exception dictionary for non 200 response', function () {
+    it('downloads to an aboslute path', function () {
+        this.timeout(5000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
+                let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
+                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", aboslutePath);
+                toolLib.debug('downloaded path: ' + downPath);
+                
+                assert(tl.exist(downPath), 'downloaded file exists');
+                assert(aboslutePath == downPath);
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('has status code in exception dictionary for non 200 response', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -97,7 +119,7 @@ mocha.describe('Tool Tests', function () {
         });
     });
 
-    mocha.it('installs a binary tool and finds it', function () {
+    it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -124,7 +146,7 @@ mocha.describe('Tool Tests', function () {
     });
 
 if (process.platform == 'win32') {
-    mocha.it('installs a 7z and finds it', function () {
+    it('installs a 7z and finds it', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -156,7 +178,7 @@ if (process.platform == 'win32') {
     });
 }
 
-    mocha.it('installs a zip and finds it', function () {
+    it('installs a zip and finds it', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -206,7 +228,7 @@ if (process.platform == 'win32') {
         });
     });
 
-    mocha.it('finds and evaluates local tool version', function () {
+    it('finds and evaluates local tool version', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -233,7 +255,7 @@ if (process.platform == 'win32') {
         });
     });
 
-    mocha.it('evaluates major match (1.x)', function () {
+    it('evaluates major match (1.x)', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -250,7 +272,7 @@ if (process.platform == 'win32') {
         });
     });
 
-    mocha.it('evaluates greater than or equal (>=4.1)', function () {
+    it('evaluates greater than or equal (>=4.1)', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
@@ -267,7 +289,7 @@ if (process.platform == 'win32') {
         });
     });
 
-    mocha.it('prepends path', function () {
+    it('prepends path', function () {
         this.timeout(2000);
 
         return new Promise<void>(async(resolve, reject)=> {
