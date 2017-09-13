@@ -30,14 +30,14 @@ addPath(binPath);
 
 var buildPath = path.join(__dirname, '_build');
 var testPath = path.join(__dirname, '_test');
-var cultures = [ 'en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW' ];
+var cultures = ['en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW'];
 
-target.clean = function() {
+target.clean = function () {
     rm('-Rf', buildPath);
     rm('-Rf', testPath);
 };
 
-target.build = function() {
+target.build = function () {
     target.clean();
     target.loc();
 
@@ -55,9 +55,9 @@ target.build = function() {
     rm(path.join(buildPath, 'index.*'));
 }
 
-target.loc = function() {
+target.loc = function () {
     // create a key->value map of the default strings
-    var defaultStrings = { };
+    var defaultStrings = {};
     var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
     if (lib.messages) {
         for (var key of Object.keys(lib.messages)) {
@@ -73,7 +73,7 @@ target.loc = function() {
     // create the culture-specific resjson files
     for (var culture of cultures) {
         // initialize the culture-specific strings from the default strings
-        var cultureStrings = { };
+        var cultureStrings = {};
         for (var key of Object.keys(defaultStrings)) {
             cultureStrings[key] = defaultStrings[key];
         }
@@ -123,18 +123,40 @@ target.loc = function() {
     }
 }
 
-target.test = function() {
+target.test = function () {
     target.build();
 
     run('tsc -p ./test --outDir ' + testPath, true);
     cp('-R', path.join(__dirname, 'test', 'data'), testPath);
     //cp('-Rf', rp('test/scripts'), testPath);
+
+    // tool lib requires a 2.115.0 agent or higher
+    process.env['AGENT_VERSION'] = '2.115.0';
+
+    // creating a cache dir in the build dir.  agent would do this
+    var cacheDir = path.join(process.cwd(), 'CACHE');
+    process.env['AGENT_TOOLSDIRECTORY'] = cacheDir;
+    tl.mkdirP(cacheDir);
+
+    // redirecting TEMP (agent would do this per build)
+    var tempDir = path.join(process.cwd(), 'TEMP');
+    tl.mkdirP(tempDir);
+    process.env['AGENT_TEMPDIRECTORY'] = tempDir;
+    if (os.platform() == 'win32') {
+        process.env['TEMP'] = tempDir;
+        process.env['TMP'] = tempDir;
+    }
+    else {
+        process.env['TMPDIR'] = tempDir;
+        tl.mkdirP(tempDir);
+    }
+
     run('mocha ' + testPath + ' --recursive', true);
 }
 
 // run the sample
 // building again is the way to clear the tool cache (creates it in the build dir)
-target.sample = function() {
+target.sample = function () {
     tl.pushd(buildPath);
 
     // tool lib requires a 2.115.0 agent or higher
@@ -155,14 +177,14 @@ target.sample = function() {
     }
     else {
         process.env['TMPDIR'] = tempDir;
-        tl.mkdirP(tempDir);   
+        tl.mkdirP(tempDir);
     }
 
     run('node sample.js', true);
     tl.popd();
 }
 
-target.handoff = function() {
+target.handoff = function () {
     // create a key->value map of default strings and comments for localizers
     //
     // resjson-style resources:
@@ -170,8 +192,8 @@ target.handoff = function() {
     //   "_greeting.comment": "A welcome greeting.",
     //
     // for more details about resjson: https://msdn.microsoft.com/en-us/library/windows/apps/hh465254.aspx
-    var defaultStrings = { };
-    var comments = { };
+    var defaultStrings = {};
+    var comments = {};
     var lib = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib.json')));
     if (lib.messages) {
         for (var key of Object.keys(lib.messages)) {
@@ -243,7 +265,7 @@ target.handoff = function() {
                             },
                             "body": [
                                 {
-                                    "trans-unit": [ ]
+                                    "trans-unit": []
                                 }
                             ]
                         }
@@ -253,7 +275,7 @@ target.handoff = function() {
         }
 
         // create a map of trans-unit
-        var unitMap = { };
+        var unitMap = {};
         for (var unit of xliff.xliff.file[0].body[0]['trans-unit']) {
             unitMap[unit['$'].id] = unit;
         }
@@ -302,7 +324,7 @@ target.handoff = function() {
         }
 
         // update the body of the xliff object
-        xliff.xliff.file[0].body[0]['trans-unit'] = [ ];
+        xliff.xliff.file[0].body[0]['trans-unit'] = [];
         for (var key of Object.keys(unitMap).sort()) {
             xliff.xliff.file[0].body[0]['trans-unit'].push(unitMap[key]);
         }
