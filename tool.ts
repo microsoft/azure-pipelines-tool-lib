@@ -242,8 +242,12 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 catch (err) {
                     reject(err);
                 }
+                finally {
+                    file.end();
+                }
             });
             file.on('error', (err) => {
+                file.end();
                 reject(err);
             })
         }
