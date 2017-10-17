@@ -190,14 +190,27 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * Download a tool from an url and stream it into a file
  * 
  * @param url       url of tool to download
- * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability)
+ * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  */
 export async function downloadTool(url: string, fileName?: string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             tl.debug(fileName);
             fileName = fileName || uuidV4();
-            var destPath = path.join(_getAgentTemp(), fileName);
+
+            // check if it's an absolute path already
+            var destPath: string;
+            if(path.isAbsolute(fileName))
+            {
+                destPath = fileName;
+            }
+            else
+            {
+                destPath = path.join(_getAgentTemp(), fileName);
+            }
+
+            // make sure that the folder exists
+            tl.mkdirP(path.dirname(destPath));
 
             console.log(tl.loc('TOOL_LIB_Downloading', url));
             tl.debug('destination ' + destPath);
@@ -207,16 +220,19 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             }
 
             // TODO: retries
+            tl.debug('downloading');
+            let response: httpm.HttpClientResponse = await http.get(url);
+            if (response.message.statusCode != 200) {
+                let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
+                err['httpStatusCode'] = response.message.statusCode;
+                
+                throw err;
+            }
+
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file.on('open', async (fd) => {
                 try {
-                    tl.debug('downloading');
-                    let response: httpm.HttpClientResponse = await http.get(url);
-                    if (response.message.statusCode != 200) {
-                        throw (new Error('Unexpected HTTP response: ' + response.message.statusCode));
-                    }
-
                     let stream = response.message.pipe(file);
                     stream.on('finish', () => {
                         tl.debug('download complete');
@@ -226,8 +242,12 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 catch (err) {
                     reject(err);
                 }
+                finally {
+                    file.end();
+                }
             });
             file.on('error', (err) => {
+                file.end();
                 reject(err);
             })
         }

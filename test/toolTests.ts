@@ -1,11 +1,11 @@
-/// <reference path="../typings/index.d.ts" />
-/// <reference path="../_build/tool.d.ts" />
-
 import assert = require('assert');
 import path = require('path');
 import fs = require('fs');
 import shell = require('shelljs');
 import os = require('os');
+
+import * as mocha from 'mocha';
+process.env['AGENT_VERSION'] = '2.115.0';
 import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
@@ -56,6 +56,45 @@ describe('Tool Tests', function () {
             }
             catch (err) {
                 reject(err);
+            }
+        });
+    });
+
+    it('downloads to an aboslute path', function () {
+        this.timeout(5000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
+                let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
+                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", aboslutePath);
+                toolLib.debug('downloaded path: ' + downPath);
+                
+                assert(tl.exist(downPath), 'downloaded file exists');
+                assert(aboslutePath == downPath);
+
+                resolve();
+            }
+            catch(err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('has status code in exception dictionary for non 200 response', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let nonExistentUrl: string = "http://httpbin.org/nonexistent";
+                let downPath: string = await toolLib.downloadTool(nonExistentUrl);
+
+                reject('a file was downloaded but it shouldnt have been');
+            } 
+            catch (err){
+                assert.equal(err['httpStatusCode'], 404, 'status code exists');
+
+                resolve();
             }
         });
     });
