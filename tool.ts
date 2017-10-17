@@ -184,15 +184,15 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 //
 // TODO: download to TEMP (agent will set TEMP)
 // TODO: keep extension intact
-// TODO: support 302 redirect
 //
 /**
  * Download a tool from an url and stream it into a file
  * 
- * @param url       url of tool to download
- * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
+ * @param url            url of tool to download
+ * @param fileName       optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
+ * @param allowRedirect  whether or not we should automatically handle redirects
  */
-export async function downloadTool(url: string, fileName?: string): Promise<string> {
+export async function downloadTool(url: string, fileName?: string, allowRedirect: boolean = true): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             tl.debug(fileName);
@@ -222,7 +222,24 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             // TODO: retries
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url);
-            if (response.message.statusCode != 200) {
+
+            // handle HTTP 302 redirect
+            if (response.message.statusCode === httpm.HttpCodes.ResourceMoved
+                && allowRedirect) {
+                tl.debug('redirect received, following Location header');
+                const location: any = response.message.headers["location"];
+                tl.debug('redirect location: ' + location);
+
+                if (location) {
+                    //return await downloadTool(location, fileName);
+                    resolve(downloadTool(location, fileName));
+                }
+                else {
+                    throw new Error("Unable to find Location header after HTTP 302 redirect.");
+                }
+            }
+
+            if (response.message.statusCode != httpm.HttpCodes.OK) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
                 
