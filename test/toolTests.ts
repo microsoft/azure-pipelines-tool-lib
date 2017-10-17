@@ -91,10 +91,47 @@ describe('Tool Tests', function () {
 
                 reject('a file was downloaded but it shouldnt have been');
             } 
-            catch (err){
+            catch (err) {
                 assert.equal(err['httpStatusCode'], 404, 'status code exists');
 
                 resolve();
+            }
+        });
+    });
+
+    it ('throws exception on redirect if allow redirect is false', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async(resolve, reject) => {
+            try {
+                
+                const redirectUrl: string = "http://httpbin.org/redirect-to?url=" + encodeURIComponent("http://httpbin.org/bytes/100");
+                const downloadPath: string = await toolLib.downloadTool(redirectUrl, null, false);
+
+                reject ('a file was downloaded but it shouldnt have been');
+            }
+            catch (err) {
+                // we expected an error because we set allowRedirect to false
+                resolve();
+            }
+        });
+    });
+
+    it ('automatically redirects if 302 is returned', function () {
+        this.timeout(15000);
+
+        return new Promise<void>(async(resolve, reject) => {
+            try {
+                
+                const redirectUrl: string = "http://httpbin.org/redirect-to?url=" + encodeURIComponent("http://httpbin.org/bytes/100");
+                const downloadPath: string = await toolLib.downloadTool(redirectUrl);
+                toolLib.debug('downloaded path: ' + downloadPath);
+
+                assert(tl.exist(downloadPath), 'downloaded file exists');
+                resolve();
+            }
+            catch (err) {
+                reject('Encountered an exception during redirect when a file should have been downloaded.');
             }
         });
     });
