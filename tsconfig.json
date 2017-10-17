@@ -5,10 +5,14 @@
         "noImplicitAny": false,
         "sourceMap": false,
         "declaration": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node", 
+        "typeRoots": [ "node_modules/@types" ]
     },
     "files": [
         "index.ts",
         "sample.ts"
+    ], 
+    "exclude": [
+        "node_modules"
     ]
 }
