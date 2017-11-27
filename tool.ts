@@ -51,8 +51,8 @@ export function prependPath(toolPath: string) {
 /**
  * Checks if a version spec is an explicit version (e.g. 1.0.1 or v1.0.1)
  * As opposed to a version spec like 1.x
- * 
- * @param versionSpec 
+ *
+ * @param versionSpec
  */
 export function isExplicitVersion(versionSpec: string) {
     let c = semver.clean(versionSpec);
@@ -75,7 +75,7 @@ export function cleanVersion(version: string) {
 
 /**
  * evaluates a list of versions and returns the latest version matching the version spec
- * 
+ *
  * @param versions      an array of versions to evaluate
  * @param versionSpec   a version spec (e.g. 1.x)
  */
@@ -107,7 +107,7 @@ export function evaluateVersions(versions: string[], versionSpec: string): strin
 //-----------------------------
 /**
  * finds the path to a tool in the local installed tool cache
- * 
+ *
  * @param toolName      name of the tool
  * @param versionSpec   version of the tool
  * @param arch          optional arch.  defaults to arch of computer
@@ -151,7 +151,7 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
 
 /**
  * Retrieves the versions of a tool that is intalled in the local tool cache
- * 
+ *
  * @param toolName  name of the tool
  * @param arch      optional arch.  defaults to arch of computer
  */
@@ -188,7 +188,7 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 //
 /**
  * Download a tool from an url and stream it into a file
- * 
+ *
  * @param url       url of tool to download
  * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  */
@@ -225,7 +225,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
-                
+                tl.debug(`Failed to download "${fileName}" from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
                 throw err;
             }
 
@@ -280,11 +280,11 @@ function _completeToolPath(tool: string, version: string, arch?: string): void {
 
 /**
  * Caches a directory and installs it into the tool cacheDir
- * 
+ *
  * @param sourceDir    the directory to cache into tools
- * @param tool          tool name  
+ * @param tool          tool name
  * @param version       version of the tool.  semver format
- * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
  */
 export async function cacheDir(sourceDir: string,
     tool: string,
@@ -318,12 +318,12 @@ export async function cacheDir(sourceDir: string,
 /**
  * Caches a downloaded file (GUID) and installs it
  * into the tool cache with a given targetName
- * 
- * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid. 
+ *
+ * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid.
  * @param targetFile    the name of the file name in the tools directory
- * @param tool          tool name  
+ * @param tool          tool name
  * @param version       version of the tool.  semver format
- * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture 
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
  */
 export async function cacheFile(sourceFile: string,
     targetFile: string,
@@ -400,8 +400,8 @@ export async function extract7z(file: string, dest?: string): Promise<string> {
 
 /**
  * installs a tool from a tar by extracting the tar and installing it into the tool cache
- * 
- * @param file      file path of the tar 
+ *
+ * @param file      file path of the tar
  * @param tool      name of tool in the tool cache
  * @param version   version of the tool
  * @param arch      arch of the tool.  optional.  defaults to the arch of the machine
@@ -476,7 +476,7 @@ function _createExtractFolder(dest?: string): string {
 
 /**
  * Scrape a web page for versions by regex
- * 
+ *
  * @param url       url to scrape
  * @param regex     regex to use for version matches
  */
