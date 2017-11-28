@@ -124,8 +124,6 @@ target.loc = function () {
 }
 
 target.test = function () {
-    target.build();
-
     run('tsc -p ./test --outDir ' + testPath, true);
     cp('-R', path.join(__dirname, 'test', 'data'), testPath);
     //cp('-Rf', rp('test/scripts'), testPath);
