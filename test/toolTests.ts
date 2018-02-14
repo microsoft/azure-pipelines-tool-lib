@@ -99,6 +99,29 @@ describe('Tool Tests', function () {
         });
     });
 
+    describe('accepts any status code < 400', function() {
+        let acceptableHttpStatusCodes:string[] = ["200","201","202","203","204","205","206","300","301","302","303","304","305","306","307","308"]
+
+        for (let statusCode of acceptableHttpStatusCodes) {
+            it('accepts HTTP status code ' + statusCode, function() {
+                return new Promise<void>(async(resolve, reject)=> {
+                    try {
+                        let statusCodeUrl: string = "https://httpstat.us/" + statusCode;
+                        let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+        
+                        resolve();
+                    } 
+                    catch (err){
+                        assert.equal(err['httpStatusCode'], 404, 'status code exists');
+        
+                        reject(err);
+                    }
+                });
+            });
+        }
+        
+    })
+
     it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
