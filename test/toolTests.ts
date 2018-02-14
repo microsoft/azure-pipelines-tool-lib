@@ -81,26 +81,44 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('has status code in exception dictionary for non 200 response', function () {
+
+    
+    describe('has status code in exception dictionary for HTTP error code responses', function () {
         this.timeout(2000);
+        
+        let httpErrorCodes:number[] = [400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,422,428,429,431,451,500,501,502,503,504,505,511,520,522,524,]
 
-        return new Promise<void>(async(resolve, reject)=> {
-            try {
-                let nonExistentUrl: string = "http://httpbin.org/nonexistent";
-                let downPath: string = await toolLib.downloadTool(nonExistentUrl);
+        for (let errorCodes of httpErrorCodes) {
+            it('error thrown on HTTP status code ' + errorCodes, function() {
+                return new Promise<void>(async(resolve, reject)=> {
+                    try {
+                        let errorCodeUrl: string = "https://httpstat.us/" + errorCodes;;
+                        let downPath: string = await toolLib.downloadTool(errorCodeUrl);
+        
+                        reject('a file was downloaded but it shouldnt have been');
+                    } 
+                    catch (err){
+                        assert.equal(err['httpStatusCode'], errorCodes, 'status code exists');
+        
+                        resolve();
+                    }
+                });
+            });
+        }
 
-                reject('a file was downloaded but it shouldnt have been');
-            } 
-            catch (err){
-                assert.equal(err['httpStatusCode'], 404, 'status code exists');
 
-                resolve();
-            }
-        });
+        
     });
 
     describe('accepts any status code < 400', function() {
-        let acceptableHttpStatusCodes:string[] = ["200","201","202","203","204","205","206","300","301","302","303","304","305","306","307","308"]
+        this.timeout(2000);
+
+        /*
+          Note that HTTP codes 1xx are acceptable as well but https://httpstat.us keeps returning the same 1xx code which leads the request to time out. 
+          In a real world situation an endpoint would at some point return a different HTTP status code.
+        */
+        let acceptableHttpStatusCodes:number[] = [200,201,202,203,204,205,206,300,301,302,303,304,305,306,307,308]
+        
 
         for (let statusCode of acceptableHttpStatusCodes) {
             it('accepts HTTP status code ' + statusCode, function() {
