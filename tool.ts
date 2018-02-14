@@ -222,7 +222,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             // TODO: retries
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url);
-            if (response.message.statusCode != 200) {
+            if (response.message.statusCode >= 400) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
                 tl.debug(`Failed to download "${fileName}" from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
