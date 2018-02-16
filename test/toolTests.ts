@@ -86,13 +86,13 @@ describe('Tool Tests', function () {
     describe('has status code in exception dictionary for HTTP error code responses', function () {
         this.timeout(2000);
         
-        let httpErrorCodes:number[] = [400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,422,428,429,431,451,500,501,502,503,504,505,511,520,522,524,]
+        let httpErrorCodes:number[] = [400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,422,428,429,431,451,500,501,502,503,504,505,511,520,522,524]
 
         for (let errorCodes of httpErrorCodes) {
-            it('error thrown on HTTP status code ' + errorCodes, function() {
+            it('error thrown on HTTP status code ' + errorCodes, async function() {
                 return new Promise<void>(async(resolve, reject)=> {
                     try {
-                        let errorCodeUrl: string = "https://httpstat.us/" + errorCodes;;
+                        let errorCodeUrl: string = `https://httpbin.org/status/${errorCodes}`;
                         let downPath: string = await toolLib.downloadTool(errorCodeUrl);
         
                         reject('a file was downloaded but it shouldnt have been');
@@ -113,25 +113,43 @@ describe('Tool Tests', function () {
     describe('accepts any status code < 400', function() {
         this.timeout(2000);
 
-        /*
-          Note that HTTP codes 1xx are acceptable as well but https://httpstat.us keeps returning the same 1xx code which leads the request to time out. 
-          In a real world situation an endpoint would at some point return a different HTTP status code.
-        */
-        let acceptableHttpStatusCodes:number[] = [200,201,202,203,204,205,206,300,301,302,303,304,305,306,307,308]
-        
+        let redirectHttpStatusCodes:number[] = [300,301,302,303,304,305,306,307,308]
 
-        for (let statusCode of acceptableHttpStatusCodes) {
-            it('accepts HTTP status code ' + statusCode, function() {
+        for(let redirectStatusCode in redirectHttpStatusCodes) {
+            it('works with redirect code ' + redirectStatusCode, async function () {
                 return new Promise<void>(async(resolve, reject)=> {
                     try {
-                        let statusCodeUrl: string = "https://httpstat.us/" + statusCode;
+                        let statusCodeUrl: string = `https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F&status_code=${redirectStatusCode}`;
                         let downPath: string = await toolLib.downloadTool(statusCodeUrl);
         
                         resolve();
                     } 
-                    catch (err){
-                        assert.equal(err['httpStatusCode'], 404, 'status code exists');
+                    catch (err){        
+                        reject(err);
+                    }
+                });
+            });
+        }
+
         
+
+        /*
+          Note that HTTP codes 1xx are acceptable as well but https://httpstat.us keeps returning the same 1xx code which leads the request to time out. 
+          In a real world situation an endpoint would at some point return a different HTTP status code.
+        */
+        let acceptableHttpStatusCodes:number[] = [200,201,202,203,204,205,206]
+        
+
+        for (let statusCode of acceptableHttpStatusCodes) {
+            it('accepts HTTP status code ' + statusCode, async function() {
+                return new Promise<void>(async(resolve, reject)=> {
+                    try {
+                        let statusCodeUrl: string = `https://httpbin.org/status/${statusCode}`;
+                        let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+        
+                        resolve();
+                    } 
+                    catch (err){        
                         reject(err);
                     }
                 });
