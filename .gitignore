@@ -45,6 +45,3 @@ package-lock.json
 
 # Temp directories
 TEMP
-
-# Resources
-Strings/*
