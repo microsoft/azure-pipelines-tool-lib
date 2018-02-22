@@ -34,8 +34,14 @@ build/Release
 node_modules
 jspm_packages
 
+# Npm lock files
+package-lock.json
+
 # Optional npm cache directory
 .npm
 
 # Optional REPL history
 .node_repl_history
+
+# Temp directories
+TEMP

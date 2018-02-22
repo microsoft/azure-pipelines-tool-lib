@@ -81,20 +81,34 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('has status code in exception dictionary for non 200 response', function () {
-        this.timeout(2000);
 
+    
+    it('has status code in exception dictionary for HTTP error code responses', async function() {
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let nonExistentUrl: string = "http://httpbin.org/nonexistent";
-                let downPath: string = await toolLib.downloadTool(nonExistentUrl);
+                let errorCodeUrl: string = "https://httpbin.org/status/400";
+                let downPath: string = await toolLib.downloadTool(errorCodeUrl);
 
                 reject('a file was downloaded but it shouldnt have been');
             } 
             catch (err){
-                assert.equal(err['httpStatusCode'], 404, 'status code exists');
+                assert.equal(err['httpStatusCode'], 400, 'status code exists');
 
                 resolve();
+            }
+        });
+    });
+
+    it('works with redirect code 302', async function () {
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let statusCodeUrl: string = "https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F&status_code=302";
+                let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+
+                resolve();
+            } 
+            catch (err){        
+                reject(err);
             }
         });
     });

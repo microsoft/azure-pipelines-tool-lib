@@ -25,7 +25,7 @@
     "semver": "^5.3.0",
     "@types/semver": "^5.3.0",
     "semver-compare": "^1.0.0",
-    "typed-rest-client": "0.14.1",
+    "typed-rest-client": "1.0.7",
     "uuid": "^3.0.1",
     "@types/uuid": "^3.0.1",
     "vsts-task-lib": "2.0.6"
