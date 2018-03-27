@@ -17,10 +17,7 @@ let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
     proxy: tl.getHttpProxyConfiguration()
-    //proxy: { proxyUrl: "http://127.0.0.1:8888" }
 } as ifm.IRequestOptions;
-
-
 let http: httpm.HttpClient = new httpm.HttpClient(userAgent, null, requestOptions);
 tl.setResourcePath(path.join(__dirname, 'lib.json'));
 
@@ -232,14 +229,10 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 throw err;
             }
 
-            //response.readBody();
-            //console.log(JSON.stringify(response));
-
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file.on('open', async (fd) => {
                 try {
-                    //response.message.
                     let stream = response.message.pipe(file);
                     stream.on('finish', () => {
                         tl.debug('download complete');

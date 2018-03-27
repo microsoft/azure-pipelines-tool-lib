@@ -9,7 +9,6 @@ process.env['AGENT_VERSION'] = '2.115.0';
 import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
 import * as toolLib from '../_build/tool';
-import { tool } from 'vsts-task-lib/task';
 
 let cachePath = path.join(process.cwd(), 'CACHE');
 let tempPath = path.join(process.cwd(), 'TEMP');
