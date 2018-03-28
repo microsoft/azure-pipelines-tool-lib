@@ -59,11 +59,11 @@ As an example, consider writing a tool installer task for [chocolatey](https://c
 Chocolatey task:
 ```
 demands: [
-    "choclatey"
+    "chocolatey"
 ]
 ``` 
 
-Choclatey tool installer task:
+Chocolatey tool installer task:
 ```
 demands: [
     "powershell"
