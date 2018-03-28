@@ -21,24 +21,37 @@ An installer task will:
 
   - Advertise common or well known versions of a tool (LTS or common) via a combo dropdown
   - Find that version in a tools cache or acquires it on demand
-  - Prepend the path with the path to that instance of the tool.   
+  - Prepend the path with the path to that instance of the tool.
 
 
 ## Tool Cache
 
-The tool cache will be located under _work/tools but there's an environment variable VSTS_TOOLS_PATH to override the location.  This is useful for scenarios such as our hosted image or offline agents which want to build a tools cache and direct the agent to use it. 
+The tool cache will be located under `_work/tools` but there's an environment variable `AGENT_TOOLSDIRECTORY` to override the location.  This is useful for scenarios such as our hosted image or offline agents which want to build a tools cache and direct the agent to use it: see 
 
-The cache will be keyed by name, version, and optionally platform (x86, amd64).  
+The cache will be keyed by name, version, and optionally platform (x86, x64).
 
 ```
-{cacheRoot}
-    {Name}
-        {version}
-            [{platform}]
-                 {binaries}
+{cache root}
+    {tool name}
+        {semantic version}
+            {platform}
+                 {tool files}
 ```
 
-The downloader should guard against incomplete downloads and be robust to virus scanners.
+The downloader should guard against incomplete downloads. Therefore, the tool downloader adds a 0-byte file named `{platform}.complete` as a sibling of `{platform}` when it has completed the download. `vsts-task-tool-lib` will check for this file before retrieving the tool.
+
+As a complete, concrete example, here is how a completed download of Python 3.6.4 for x64 would look in the tool cache:
+
+```
+$AGENT_TOOLSDIRECTORY/
+    Python/
+        3.6.4/
+            x64/
+                {tool files}
+            x64.complete
+```
+
+The downloader should also be robust to virus scanners.
 
 ## Setting up the environment
 
