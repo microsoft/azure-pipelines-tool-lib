@@ -70,14 +70,14 @@ Since using a tool installer means the tool will be acquired if not present, the
 As an example, consider writing a tool installer task for [chocolatey](https://chocolatey.org) and there is a separate chocolatey task.  Chocolatey is a windows only tool.
 
 Chocolatey task:
-```
+```JSON
 demands: [
     "chocolatey"
 ]
 ``` 
 
 Chocolatey tool installer task:
-```
+```JSON
 demands: [
     "powershell"
 ],
@@ -122,8 +122,7 @@ The task lib will offer a ToolInstall class.
 This is the api the author of the tool installer uses
 
 API:
-```
-
+```TypeScript
 // returns location of downloaded package
 download(url: string): Promise string    
 
@@ -137,7 +136,7 @@ setToolVariable(name: string, location: string): Promise void;
 ```
 
 Sample:
-```
+```TypeScript
 import tl = require('vsts-task-lib/task');
 import tim = require('vsts-task-lib/toolinstaller');
 
@@ -149,7 +148,7 @@ async install() {
 
         let arch = 'x64'; 
         var ext = tl.osType() == 'Windows_NT' ? 'zip' : 'tar.gz';
-        var nodeUrl="https://nodejs.org/dist/v$" + version + "/node-v" + version + "-" + os + "-" + arch;
+        var nodeUrl = "https://nodejs.org/dist/v$" + version + "/node-v" + version + "-" + os + "-" + arch;
 
         let temp: string = await inst.download(nodeUrl);
 
