@@ -112,20 +112,6 @@ The [`vsts-task-tool-lib/tool`](https://github.com/Microsoft/vsts-task-tool-lib/
 
 Example:
 ```TypeScript
-// returns location of downloaded package
-download(url: string): Promise string    
-
-// tar.gz, zip.  will support handful of well known as convenience.  can always control your own
-// will extract to the proper location in the agents tools folder
-// returns string of tool set
-extract(location: string: type: string): Promise string;
-
-prependPath(location: string): Promise void;
-setToolVariable(name: string, location: string): Promise void;
-```
-
-Sample:
-```TypeScript
 import * as path from 'path';
 
 import * as taskLib from 'vsts-task-lib/task';
