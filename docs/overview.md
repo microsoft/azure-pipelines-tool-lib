@@ -106,22 +106,11 @@ Some tools have caches of there own which when used by multiple agents on the sa
 
 The agent will provide a caches well known folder in the _work folder which has caches keyed by the tool name.
 
-## TaskLib API
+## vsts-task-tool-lib
 
-This is the api that the tool installer task author uses.  A ToolInstaller class will be introduced which primarily offers conveniences for:
+The [`vsts-task-tool-lib/tool`](https://github.com/Microsoft/vsts-task-tool-lib/blob/master/tool.ts) library offers functions for downloading and extracting tools and making them available to subsequent steps in the build.
 
-- Downloading and extracting tools from http, nuget, npm and other distribution solutions.
-- Pre-pending the path for subsequent tasks downstream and/or ...
-- Setting tool specific environment variables like M2_HOME
-- Sets tool specific cache locations to temp to avoid conflicting SxS agents on the same machine
-
-The task lib will offer a ToolInstall class.
-
-## ToolInstaller API
-
-This is the api the author of the tool installer uses
-
-API:
+Example:
 ```TypeScript
 // returns location of downloaded package
 download(url: string): Promise string    
@@ -132,34 +121,36 @@ download(url: string): Promise string
 extract(location: string: type: string): Promise string;
 
 prependPath(location: string): Promise void;
-setToolVariable(name: string, location: string): Promise void;  
+setToolVariable(name: string, location: string): Promise void;
 ```
 
 Sample:
 ```TypeScript
-import tl = require('vsts-task-lib/task');
-import tim = require('vsts-task-lib/toolinstaller');
+import * as path from 'path';
 
-async install() {
+import * as taskLib from 'vsts-task-lib/task';
+import * as toolLib from 'vsts-task-tool-lib/tool';
+
+async function installNodeOnLinux() {
     try {
-         
-        let version: string = tl.getInput('version', true);
-        let ti: tim.ToolInstaller = new ToolInstaller('node', version); 
+        // Get task inputs
+        const version: string = taskLib.getInput('version', true);
+        const arch: string = taskLib.getInput('architecture', true);
 
-        let arch = 'x64'; 
-        var ext = tl.osType() == 'Windows_NT' ? 'zip' : 'tar.gz';
-        var nodeUrl = "https://nodejs.org/dist/v$" + version + "/node-v" + version + "-" + os + "-" + arch;
+        // Construct the download URL
+        const nodeUrl = `https://nodejs.org/dist/v$${version}/node-v${version}-linux-${arch}.tar.gz`;
 
-        let temp: string = await inst.download(nodeUrl);
+        // Download the .tar.gz and extract it
+        const temp: string = await toolLib.downloadTool(nodeUrl);
+        const extractRoot: string = await toolLib.extractTar(temp);
 
-        let extractRoot = await ti.extract(temp);
-
-        // tool installer knows node binary is in bin folder of extracted tool
-        ti.prependPath(path.join(extractRoot, 'bin'));
+        // The Node binary is in the bin folder of the extracted directory
+        toolLib.prependPath(path.join(extractRoot, 'bin'));
     }
     catch (err) {
-        tl.setResult(tl.TaskResult.Failed, tl.loc('NodeInstallerFailed', err.message));
+        taskLib.setResult(taskLib.TaskResult.Failed, taskLib.loc('NodeInstallerFailed', err.message));
     }
+}
 ```
 
 Interesting discussion around urls changing from a vendor.  We can always patch tasks or we could externalize the formats.  Taking simplest approach right now (knowledge baked into the installer).
