@@ -28,7 +28,7 @@
     "typed-rest-client": "1.0.7",
     "uuid": "^3.0.1",
     "@types/uuid": "^3.0.1",
-    "vsts-task-lib": "2.0.6"
+    "vsts-task-lib": "2.4.0"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
