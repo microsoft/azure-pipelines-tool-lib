@@ -219,7 +219,6 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 throw new Error("Destination file path already exists");
             }
 
-            // TODO: retries
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url);
             if (response.message.statusCode != 200) {
@@ -229,12 +228,35 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 throw err;
             }
 
+            const contentLength = Number(response.message.headers['content-length']);
+            if(contentLength) {
+                tl.debug(`content-length: ${contentLength} bytes`);
+            } else {
+                tl.debug(`content-length header missing.`);
+            }
+
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file.on('open', async (fd) => {
                 try {
                     let stream = response.message.pipe(file);
                     stream.on('finish', () => {
+                        let fileSize: number;
+                        try {
+                            fileSize = fs.statSync(destPath).size;
+                            tl.debug(`file size: ${fileSize} bytes`);
+                        } catch (err) {
+                            reject(new Error(`Unable to find file size for ${destPath}`));
+                        }
+
+                        if (contentLength 
+                            && fileSize 
+                            && contentLength !== fileSize) {
+                            // The size of the downloaded file does not match the content-length 
+                            // from the HTTP request, there was an issue.
+                            reject(new Error(`content-length(${contentLength} bytes) did not match downloaded file size(${fileSize} bytes).`));
+                        }
+
                         tl.debug('download complete');
                         resolve(destPath);
                     });
