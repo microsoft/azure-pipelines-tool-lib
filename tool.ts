@@ -228,7 +228,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 throw err;
             }
 
-            const contentLength = Number(response.message.headers['content-length']);
+            const contentLength: number = Number(response.message.headers['content-length']);
             if(contentLength) {
                 tl.debug(`content-length: ${contentLength} bytes`);
             } else {
