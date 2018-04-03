@@ -246,7 +246,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                             fileSize = fs.statSync(destPath).size;
                             tl.debug(`file size: ${fileSize} bytes`);
                         } catch (err) {
-                            reject(new Error(`Unable to find file size for ${destPath}`));
+                            tl.debug(`Unable to find file size for ${destPath}`);
                         }
 
                         if (contentLength 
