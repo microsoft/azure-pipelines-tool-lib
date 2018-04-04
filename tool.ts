@@ -224,15 +224,16 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             }
             
             tl.debug('downloading');
-            const  statusCodesToRetry = [502, 503, 504];
+            const statusCodesToRetry = [httpm.HttpCodes.BadGateway, httpm.HttpCodes.ServiceUnavailable, httpm.HttpCodes.GatewayTimeout];
             let retryCount = 0;
+            const maxRetries = 2;
             let response: httpm.HttpClientResponse = await http.get(url);
 
-            while(retryCount < 2 && statusCodesToRetry.indexOf(response.message.statusCode) > -1) {
-                tl.debug(`Download attempt "${retryCount + 1}" failed.`);
+            while(retryCount < maxRetries && statusCodesToRetry.indexOf(response.message.statusCode) > -1) {
+                tl.debug(`Download attempt "${retryCount + 1}" of "${maxRetries + 1}" failed with status code "${response.message.statusCode}".`);
                 retryCount += 1;
                 await delay(1000);
-                tl.debug(`Downloading attempt "${retryCount + 1}"`)
+                tl.debug(`Downloading attempt "${retryCount + 1}" of "${maxRetries + 1}"`)
                 response = await http.get(url);
             }
             
