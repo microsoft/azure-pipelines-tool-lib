@@ -133,6 +133,20 @@ describe('Tool Tests', function () {
         });
     });
 
+    // it("works with a 502 temporary failure", async function() {
+  //   return new Promise<void>(async (resolve, reject) => {
+  //     try {
+  //       let statusCodeUrl: string =
+  //         "http://localhost:3000";
+  //       let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+
+  //       resolve();
+  //     } catch (err) {
+  //       reject(err);
+  //     }
+  //   });
+  // });
+
     it('installs a binary tool and finds it', function () {
         this.timeout(2000);
 
