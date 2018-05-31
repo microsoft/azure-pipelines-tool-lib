@@ -182,7 +182,6 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 //---------------------
 
 //
-// TODO: download to TEMP (agent will set TEMP)
 // TODO: keep extension intact
 // TODO: support 302 redirect
 //
@@ -355,7 +354,22 @@ export async function cacheFile(sourceFile: string,
 // Extract Functions
 //---------------------
 
-export async function extract7z(file: string, dest?: string): Promise<string> {
+/**
+ * Extract a .7z file
+ *
+ * @param file     path to the .7z file
+ * @param dest     destination directory. Optional.
+ * @param _7zPath  path to 7zr.exe. Optional, for long path support. Most .7z archives do not have this
+ * problem. If your .7z archive contains very long paths, you can pass the path to 7zr.exe which will
+ * gracefully handle long paths. By default 7zdec.exe is used because it is a very small program and is
+ * bundled with the tool lib. However it does not support long paths. 7zr.exe is the reduced command line
+ * interface, it is smaller than the full command line interface, and it does support long paths. At the
+ * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
+ * Be sure to check the current license agreement. If 7zr.exe is bundled with your task, then the path
+ * to 7zr.exe can be pass to this function.
+ * @returns        path to the destination directory
+ */
+export async function extract7z(file: string, dest?: string, _7zPath?: string): Promise<string> {
     if (process.platform != 'win32') {
         throw new Error('extract7z() not supported on current OS');
     }
@@ -371,22 +385,34 @@ export async function extract7z(file: string, dest?: string): Promise<string> {
     try {
         process.chdir(dest);
 
-        // extract
-        let escapedScript = path.join(__dirname, 'Invoke-7zdec.ps1').replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
-        let escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-        let escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-        let command: string = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`
-        let powershellPath = tl.which('powershell', true);
-        let powershell: trm.ToolRunner = tl.tool(powershellPath)
-            .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
-            .arg(command);
-        powershell.on('stdout', (buffer: Buffer) => {
-            process.stdout.write(buffer);
-        });
-        powershell.on('stderr', (buffer: Buffer) => {
-            process.stderr.write(buffer);
-        });
-        await powershell.exec(<trm.IExecOptions>{ silent: true });
+        if (_7zPath) {
+            // extract
+            let _7z: trm.ToolRunner = tl.tool(_7zPath)
+                .arg('x')         // eXtract files with full paths
+                .arg('-bb1')      // -bb[0-3] : set output log level
+                .arg('-bd')       // disable progress indicator
+                .arg('-sccUTF-8') // set charset for for console input/output
+                .arg(file);
+            await _7z.exec();
+        }
+        else {
+            // extract
+            let escapedScript = path.join(__dirname, 'Invoke-7zdec.ps1').replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
+            let escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+            let escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+            let command: string = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`
+            let powershellPath = tl.which('powershell', true);
+            let powershell: trm.ToolRunner = tl.tool(powershellPath)
+                .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
+                .arg(command);
+            powershell.on('stdout', (buffer: Buffer) => {
+                process.stdout.write(buffer);
+            });
+            powershell.on('stderr', (buffer: Buffer) => {
+                process.stderr.write(buffer);
+            });
+            await powershell.exec(<trm.IExecOptions>{ silent: true });
+        }
     }
     finally {
         process.chdir(originalCwd);
