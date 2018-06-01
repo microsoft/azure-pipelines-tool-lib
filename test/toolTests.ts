@@ -101,8 +101,6 @@ describe('Tool Tests', function () {
         });
     });
 
-
-    
     it('has status code in exception dictionary for HTTP error code responses', async function() {
         return new Promise<void>(async(resolve, reject)=> {
             try {
@@ -161,7 +159,7 @@ describe('Tool Tests', function () {
 
     if (process.platform == 'win32') {
         it('installs a 7z and finds it', function () {
-            this.timeout(2000);
+            this.timeout(20000);
 
             return new Promise<void>(async (resolve, reject) => {
                 try {
@@ -182,6 +180,46 @@ describe('Tool Tests', function () {
                     assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
                     assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
                     assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+
+                    resolve();
+                }
+                catch (err) {
+                    reject(err);
+                }
+            });
+        });
+
+        it('extract 7z using custom 7z tool', function () {
+            this.timeout(20000);
+
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    let tempDir = path.join(__dirname, 'test-extract-7z-using-custom-7z-tool');
+                    tl.mkdirP(tempDir);
+
+                    // create mock7zr.cmd
+                    let mock7zrPath: string = path.join(tempDir, 'mock7zr.cmd');
+                    fs.writeFileSync(
+                        mock7zrPath,
+                        [
+                            'echo %* > "%~dp0mock7zr-args.txt"',
+                            `"${path.join(__dirname, '..', 'externals', '7zdec.exe')}" x %5`
+                        ].join('\r\n'));
+
+                    // copy the 7z file to the test dir
+                    let _7zFile: string = path.join(tempDir, 'test.7z');
+                    tl.cp(path.join(__dirname, 'data', 'test.7z'), _7zFile);
+
+                    // extract
+                    let extPath: string = await toolLib.extract7z(_7zFile, null, mock7zrPath);
+
+                    // assert
+                    assert(tl.exist(extPath), 'found tool does not exist');
+                    assert(tl.exist(path.join(tempDir, 'mock7zr-args.txt')), 'mock7zr-args.txt does not exist');
+                    assert.equal(fs.readFileSync(path.join(tempDir, 'mock7zr-args.txt')).toString().trim(), `x -bb1 -bd -sccUTF-8 ${_7zFile}`);
+                    assert(tl.exist(path.join(extPath, 'file.txt')), 'file.txt does not exist');
+                    assert(tl.exist(path.join(extPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt does not exist');
+                    assert(tl.exist(path.join(extPath, 'folder', 'nested-file.txt')), 'nested-file.txt does not exist');
 
                     resolve();
                 }
