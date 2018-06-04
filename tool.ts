@@ -233,7 +233,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             file.on('open', async (fd) => {
                 try {
                     let stream = response.message.pipe(file);
-                    stream.on('finish', () => {
+                    stream.on('close', () => {
                         tl.debug('download complete');
                         resolve(destPath);
                     });
