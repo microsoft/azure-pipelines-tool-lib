@@ -429,14 +429,15 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string): 
  * @param version   version of the tool
  * @param arch      arch of the tool.  optional.  defaults to the arch of the machine
  * @param options   IExtractOptions
+ * @param destination   destination directory. optional.
  */
-export async function extractTar(file: string): Promise<string> {
+export async function extractTar(file: string, destination?: string): Promise<string> {
 
     // mkdir -p node/4.7.0/x64
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
 
     console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
-    let dest = _createExtractFolder();
+    let dest = _createExtractFolder(destination);
 
     let tr: trm.ToolRunner = tl.tool('tar');
     tr.arg(['xzC', dest, '-f', file]);
@@ -445,13 +446,13 @@ export async function extractTar(file: string): Promise<string> {
     return dest;
 }
 
-export async function extractZip(file: string): Promise<string> {
+export async function extractZip(file: string, destination?: string): Promise<string> {
     if (!file) {
         throw new Error("parameter 'file' is required");
     }
 
     console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
-    let dest = _createExtractFolder();
+    let dest = _createExtractFolder(destination);
 
     if (process.platform == 'win32') {
         // build the powershell command
