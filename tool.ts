@@ -486,9 +486,7 @@ function _createExtractFolder(dest?: string): string {
         dest = path.join(_getAgentTemp(), uuidV4());
     }
 
-    if (!tl.exist(dest)) {
-        tl.mkdirP(dest);
-    }
+    tl.mkdirP(dest);
     
     return dest;
 }
