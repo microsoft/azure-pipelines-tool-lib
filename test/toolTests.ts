@@ -280,6 +280,59 @@ describe('Tool Tests', function () {
         });
     });
 
+    it('installs a zip and extracts it to specified directory', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                let tempDir = path.join(__dirname, 'test-install-zip');
+                tl.mkdirP(tempDir);
+
+                // stage the layout for a zip file:
+                //   file.txt
+                //   folder/nested-file.txt
+                let stagingDir = path.join(tempDir, 'zip-staging');
+                tl.mkdirP(path.join(stagingDir, 'folder'));
+                fs.writeFileSync(path.join(stagingDir, 'file.txt'), '');
+                fs.writeFileSync(path.join(stagingDir, 'folder', 'nested-file.txt'), '');
+
+                // create the zip
+                let zipFile = path.join(tempDir, 'test.zip');
+                if (process.platform == 'win32') {
+                    let escapedStagingPath = stagingDir.replace(/'/g, "''") // double-up single quotes
+                    let escapedZipFile = zipFile.replace(/'/g, "''");
+                    let powershell = tl.tool(tl.which('powershell', true))
+                        .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
+                        .arg(`$ErrorActionPreference = 'Stop' ; Add-Type -AssemblyName System.IO.Compression.FileSystem ; [System.IO.Compression.ZipFile]::CreateFromDirectory('${escapedStagingPath}', '${escapedZipFile}')`);
+                    powershell.execSync();
+                }
+                else {
+                    let zip = tl.tool('zip')
+                        .arg(zipFile)
+                        .arg('-r')
+                        .arg('.');
+                    zip.execSync(<trm.IExecOptions>{ cwd: stagingDir });
+                }
+
+                let destDir = path.join(__dirname, 'unzip-dest');
+                tl.mkdirP(destDir);
+
+                let extPath: string = await toolLib.extractZip(zipFile, destDir);
+                toolLib.cacheDir(extPath, 'foo', '1.1.0');
+                let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
+                assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
+                assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
+                assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+
+                resolve();
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    });
+
     it('finds and evaluates local tool version', function () {
         this.timeout(2000);
 
