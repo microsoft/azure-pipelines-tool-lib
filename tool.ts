@@ -183,7 +183,6 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 
 //
 // TODO: keep extension intact
-// TODO: support 302 redirect
 //
 /**
  * Download a tool from an url and stream it into a file

@@ -66,7 +66,28 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=http%3A%2F%2Fhttpbin.org%2Fbytes%2F100&status_code=302");
+                
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=" + encodeURI('http://httpbin.org/bytes/100') + "&status_code=302");
+                toolLib.debug('downloaded path: ' + downPath);
+
+                assert(tl.exist(downPath), 'downloaded file exists');
+                assert.equal(fs.statSync(downPath).size, 100, 'downloaded file is the correct size');
+
+                resolve();
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('downloads a 100 byte file after a redirect 303 (See Other)', function () {
+        this.timeout(5000);
+
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=" + encodeURI('http://httpbin.org/bytes/100') + "&status_code=303");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
