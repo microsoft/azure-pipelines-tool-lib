@@ -1,6 +1,7 @@
 import assert = require('assert');
 import path = require('path');
 import fs = require('fs');
+import nock = require ('nock');
 import shell = require('shelljs');
 import os = require('os');
 
@@ -15,7 +16,13 @@ let tempPath = path.join(process.cwd(), 'TEMP');
 
 describe('Tool Tests', function () {
     before(function () {
-
+        nock('http://microsoft.com')
+            .persist()
+            .get('/bytes/35')
+            .reply(200, {
+                username: 'abc',
+                password: 'def'
+                });
     });
 
     after(function () {
@@ -42,16 +49,14 @@ describe('Tool Tests', function () {
         });
     }
 
-    it('downloads a 100 byte file', function () {
-        this.timeout(5000);
-
+    it('downloads a 35 byte file', function () {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
-                assert.equal(fs.statSync(downPath).size, 100, 'downloaded file is the correct size');
+                assert.equal(fs.statSync(downPath).size, 35, 'downloaded file is the correct size');
 
                 resolve();
             }
@@ -61,17 +66,21 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('downloads a 100 byte file after a redirect', function () {
-        this.timeout(5000);
+    it('downloads a 35 byte file after a redirect', function () {
+        nock('http://microsoft.com') 
+            .get('/redirect-to')
+            .reply(303, undefined, {
+                location:'http://microsoft.com/bytes/35'
+            });
 
         return new Promise<void>(async (resolve, reject) => {
             try {
                 
-                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=" + encodeURI('http://httpbin.org/bytes/100') + "&status_code=302");
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/redirect-to");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
-                assert.equal(fs.statSync(downPath).size, 100, 'downloaded file is the correct size');
+                assert.equal(fs.statSync(downPath).size, 35, 'downloaded file is the correct size');
 
                 resolve();
             }
@@ -82,13 +91,11 @@ describe('Tool Tests', function () {
     });
 
     it('downloads to an aboslute path', function () {
-        this.timeout(5000);
-
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
                 let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", aboslutePath);
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35", aboslutePath);
                 toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -103,9 +110,16 @@ describe('Tool Tests', function () {
     });
 
     it('has status code in exception dictionary for HTTP error code responses', async function() {
+        nock('http://microsoft.com')
+            .get('/bytes/bad')
+            .reply(400, {
+                username: 'bad',
+                password: 'file'
+            });
+
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let errorCodeUrl: string = "https://httpbin.org/status/400";
+                let errorCodeUrl: string = "http://microsoft.com/bytes/bad";
                 let downPath: string = await toolLib.downloadTool(errorCodeUrl);
 
                 reject('a file was downloaded but it shouldnt have been');
@@ -119,9 +133,14 @@ describe('Tool Tests', function () {
     });
 
     it('works with redirect code 302', async function () {
+        nock('http://microsoft.com') 
+            .get('/redirect-to')
+            .reply(302, undefined, {
+                location:'http://microsoft.com/bytes/35'
+            });
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let statusCodeUrl: string = "https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F&status_code=302";
+                let statusCodeUrl: string = "http://microsoft.com/redirect-to";
                 let downPath: string = await toolLib.downloadTool(statusCodeUrl);
 
                 resolve();
@@ -133,11 +152,9 @@ describe('Tool Tests', function () {
     });
 
     it('installs a binary tool and finds it', function () {
-        this.timeout(2000);
-
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -335,12 +352,10 @@ describe('Tool Tests', function () {
     });
 
     it('finds and evaluates local tool version', function () {
-        this.timeout(2000);
-
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath1_1: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
+                let downPath1_2: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
 
                 toolLib.cacheFile(downPath1_1, 'foo', 'foo', '1.1.0');
                 toolLib.cacheFile(downPath1_2, 'foo', 'foo', '1.2.0');

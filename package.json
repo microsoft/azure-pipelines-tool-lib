@@ -33,6 +33,7 @@
   "devDependencies": {
     "typescript": "^2.2.1",
     "@types/node": "^8.0.19",
+    "nock": "9.6.1",
     "mocha": "^3.2.0",
     "@types/mocha": "^2.2.41",
     "shelljs": "^0.7.6",
