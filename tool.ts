@@ -16,7 +16,8 @@ let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
-    proxy: tl.getHttpProxyConfiguration()
+    proxy: tl.getHttpProxyConfiguration(),
+    cert: tl.getHttpCertConfiguration()
 } as ifm.IRequestOptions;
 let http: httpm.HttpClient = new httpm.HttpClient(userAgent, null, requestOptions);
 tl.setResourcePath(path.join(__dirname, 'lib.json'));
