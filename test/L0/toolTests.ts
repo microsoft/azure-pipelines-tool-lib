@@ -9,7 +9,7 @@ import * as mocha from 'mocha';
 process.env['AGENT_VERSION'] = '2.115.0';
 import * as tl from 'vsts-task-lib/task';
 import * as trm from 'vsts-task-lib/toolrunner';
-import * as toolLib from '../_build/tool';
+import * as toolLib from '../../_build/tool';
 
 let cachePath = path.join(process.cwd(), 'CACHE');
 let tempPath = path.join(process.cwd(), 'TEMP');
@@ -221,7 +221,7 @@ describe('Tool Tests', function () {
                         mock7zrPath,
                         [
                             'echo %* > "%~dp0mock7zr-args.txt"',
-                            `"${path.join(__dirname, '..', 'externals', '7zdec.exe')}" x %5`
+                            `"${path.join(__dirname, '../..', 'externals', '7zdec.exe')}" x %5`
                         ].join('\r\n'));
 
                     // copy the 7z file to the test dir
