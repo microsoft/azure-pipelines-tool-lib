@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node make.js build",
     "test": "node make.js test",
-    "sample": "node make.js sample"
+    "sample": "node make.js sample",
+    "units": "node make.js units"
   },
   "repository": {
     "type": "git",
