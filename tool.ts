@@ -247,16 +247,6 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             })
         }
         catch (error) {
-            if (error.code){
-                // Print the HTTP Error code.  These are always set when
-                // there is a proxy problem.  Two usual suspects are:
-                // UNABLE_TO_VERIFY_LEAF_SIGNATURE: True when your proxy
-                // is expressing a self signed cert or when you need
-                // to trust the root CA from your proxy.
-                // UNABLE_TO_GET_ISSUER_CERT_LOCALLY: Seems to be set
-                // when you haven't trusted intermediate CA of your proxy.
-                tl.error(`Error code is(${error.code})`)
-            }
             reject(error);
         }
     });
@@ -496,7 +486,7 @@ function _createExtractFolder(dest?: string): string {
     }
 
     tl.mkdirP(dest);
-
+    
     return dest;
 }
 
