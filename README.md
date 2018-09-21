@@ -31,8 +31,16 @@ $ npm run build
 
 # Test
 
+To run all tests:
+
 ```bash
 $ npm test
+```
+
+To just run unit tests:
+
+```bash
+$ npm run units
 ```
 
 # Sample

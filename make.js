@@ -29,11 +29,13 @@ if (!test('-d', binPath)) {
 addPath(binPath);
 
 var buildPath = path.join(__dirname, '_build');
-var testPath = path.join(__dirname, '_test');
+var unitPath = path.join(__dirname, '_test', 'units');
+var testPath = path.join(__dirname, '_test', 'tests');
 var cultures = ['en-US', 'de-DE', 'es-ES', 'fr-FR', 'it-IT', 'ja-JP', 'ko-KR', 'ru-RU', 'zh-CN', 'zh-TW'];
 
 target.clean = function () {
     rm('-Rf', buildPath);
+    rm('-Rf', unitPath);
     rm('-Rf', testPath);
 };
 
@@ -123,10 +125,7 @@ target.loc = function () {
     }
 }
 
-target.test = function () {
-    target.build();
-
-    run('tsc -p ./test --outDir ' + testPath, true);
+var runTests = function (testPath) {
     cp('-R', path.join(__dirname, 'test', 'data'), testPath);
     //cp('-Rf', rp('test/scripts'), testPath);
 
@@ -152,6 +151,23 @@ target.test = function () {
     }
 
     run('mocha ' + testPath + ' --recursive', true);
+}
+
+target.units = function () {
+    console.log("-------Unit Tests-------");
+    run('tsc -p ./test/units --outDir ' + unitPath, true);
+    runTests(unitPath);
+}
+
+target.test = function () {
+    target.build();
+
+    console.log("-------Unit Tests-------");
+    run('tsc -p ./test/units --outDir ' + unitPath, true);
+
+    console.log("-------Other Tests-------");
+    run('tsc -p ./test/tests --outDir ' + testPath, true);
+    runTests(testPath);
 }
 
 // run the sample
