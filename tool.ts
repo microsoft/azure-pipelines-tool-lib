@@ -5,8 +5,8 @@ import * as os from 'os';
 import * as process from 'process';
 import * as fs from 'fs';
 import * as semver from 'semver';
-import * as tl from 'vsts-task-lib/task';
-import * as trm from 'vsts-task-lib/toolrunner';
+import * as tl from 'azure-pipelines-task-lib/task';
+import * as trm from 'azure-pipelines-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
 

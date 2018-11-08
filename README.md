@@ -1,6 +1,6 @@
-# VSTS Tasks Tool Installer SDK
+# Azure Pipelines Tool Installer SDK
 
-Tool installer tasks SDK for [Visual Studio Team Services](https://www.visualstudio.com/en-us/products/visual-studio-team-services-vs.aspx) build and deployment.
+Tool installer tasks SDK for [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
 
 [Tool Installer Task Overview: Read Here](docs/overview.md).
 

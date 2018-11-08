@@ -1,0 +1,14 @@
+
+steps:
+# using cli
+- script: npm install
+  displayName: 'install'
+- script: npm run build
+  displayName: 'build'
+# test with node 6
+- task: NodeTool@0
+  displayName: use node 6.10.3
+  inputs:
+    versionSpec: "6.10.3"  
+- script: npm test
+  displayName: 'test'
