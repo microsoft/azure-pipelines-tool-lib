@@ -1,7 +1,7 @@
 require('shelljs/make');
 var fs = require('fs');
 var path = require('path');
-var tl = require('vsts-task-lib/task');
+var tl = require('azure-pipelines-task-lib/task');
 var os = require('os');
 var xml2js = require('xml2js');
 

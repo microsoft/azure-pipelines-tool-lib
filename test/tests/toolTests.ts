@@ -6,8 +6,8 @@ import os = require('os');
 
 import * as mocha from 'mocha';
 process.env['AGENT_VERSION'] = '2.115.0';
-import * as tl from 'vsts-task-lib/task';
-import * as trm from 'vsts-task-lib/toolrunner';
+import * as tl from 'azure-pipelines-task-lib/task';
+import * as trm from 'azure-pipelines-task-lib/toolrunner';
 import * as toolLib from '../../_build/tool';
 
 let cachePath = path.join(process.cwd(), 'CACHE');
