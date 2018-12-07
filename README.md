@@ -1,6 +1,6 @@
-# VSTS Tasks Tool Installer SDK
+# Azure Pipelines Tool Installer SDK
 
-Tool installer tasks SDK for [Visual Studio Team Services](https://www.visualstudio.com/en-us/products/visual-studio-team-services-vs.aspx) build and deployment.
+Tool installer tasks SDK for [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
 
 [Tool Installer Task Overview: Read Here](docs/overview.md).
 
@@ -11,11 +11,17 @@ Sample of tool api usage is [here](sample.ts)
 In development.  Preview installer tasks soon.
 
 ## Status
+
 |   | Build & Test |
 |---|:-----:|
-|![Win](docs/res/win_med.png) **Windows**|![Build & Test](https://mseng.visualstudio.com/_apis/public/build/definitions/b924d696-3eae-4116-8443-9a18392d8544/5199/badge?branch=master)| 
-|![Apple](docs/res/apple_med.png) **OSX**|![Build & Test](https://mseng.visualstudio.com/_apis/public/build/definitions/b924d696-3eae-4116-8443-9a18392d8544/5200/badge?branch=master)|
-|![Ubuntu14](docs/res/ubuntu_med.png) **Ubuntu 14.04**|![Build & Test](https://mseng.visualstudio.com/_apis/public/build/definitions/b924d696-3eae-4116-8443-9a18392d8544/5201/badge?branch=master)|
+|![Win-x64](docs/res/win_med.png) **Windows**|[![Build & Test][win-build-badge]][build]| 
+|![macOS](docs/res/apple_med.png) **macOS**|[![Build & Test][macOS-build-badge]][build]| 
+|![Linux-x64](docs/res/ubuntu_med.png) **Linux**|[![Build & Test][linux-build-badge]][build]|
+
+[win-build-badge]: https://dev.azure.com/mseng/PipelineTools/_apis/build/status/azure-pipelines-tool-lib?branchName=features/rebrand&jobname=VS2017_Win2016
+[macOS-build-badge]: https://dev.azure.com/mseng/PipelineTools/_apis/build/status/azure-pipelines-tool-lib?branchName=features/rebrand&jobname=MacOS_1013
+[linux-build-badge]: https://dev.azure.com/mseng/PipelineTools/_apis/build/status/azure-pipelines-tool-lib?branchName=features/rebrand&jobname=Ubuntu_1604
+[build]: https://dev.azure.com/mseng/PipelineTools/_build/latest?definitionId=7750
 
 # Build
 
@@ -31,8 +37,16 @@ $ npm run build
 
 # Test
 
+To run all tests:
+
 ```bash
 $ npm test
+```
+
+To just run unit tests:
+
+```bash
+$ npm run units
 ```
 
 # Sample

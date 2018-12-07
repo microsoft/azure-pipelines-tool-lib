@@ -38,7 +38,7 @@ The cache will be keyed by name, version, and optionally platform (x86, x64).
                  {tool files}
 ```
 
-The downloader should guard against incomplete downloads. Therefore, the tool downloader adds a 0-byte file named `{platform}.complete` as a sibling of `{platform}` when it has completed the download. `vsts-task-tool-lib` will check for this file before retrieving the tool.
+The downloader should guard against incomplete downloads. Therefore, the tool downloader adds a 0-byte file named `{platform}.complete` as a sibling of `{platform}` when it has completed the download. `azure-pipelines-tool-lib` will check for this file before retrieving the tool.
 
 As a complete, concrete example, here is how a completed download of Python 3.6.4 for x64 would look in the tool cache:
 
@@ -106,16 +106,16 @@ Some tools have caches of there own which when used by multiple agents on the sa
 
 The agent will provide a caches well known folder in the _work folder which has caches keyed by the tool name.
 
-## vsts-task-tool-lib
+## azure-pipelines-tool-lib
 
-The [`vsts-task-tool-lib/tool`](https://github.com/Microsoft/vsts-task-tool-lib/blob/master/tool.ts) library offers functions for downloading and extracting tools and making them available to subsequent steps in the build.
+The [`azure-pipelines-tool-lib/tool`](https://github.com/Microsoft/azure-pipelines-tool-lib/blob/master/tool.ts) library offers functions for downloading and extracting tools and making them available to subsequent steps in the build.
 
 Example:
 ```TypeScript
 import * as path from 'path';
 
-import * as taskLib from 'vsts-task-lib/task';
-import * as toolLib from 'vsts-task-tool-lib/tool';
+import * as taskLib from 'azure-pipelines-task-lib/task';
+import * as toolLib from 'azure-pipelines-tool-lib/tool';
 
 async function installNodeOnLinux() {
     try {

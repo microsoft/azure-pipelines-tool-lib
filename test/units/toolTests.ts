@@ -1,21 +1,28 @@
 import assert = require('assert');
 import path = require('path');
 import fs = require('fs');
+import nock = require ('nock');
 import shell = require('shelljs');
 import os = require('os');
 
 import * as mocha from 'mocha';
 process.env['AGENT_VERSION'] = '2.115.0';
-import * as tl from 'vsts-task-lib/task';
-import * as trm from 'vsts-task-lib/toolrunner';
-import * as toolLib from '../_build/tool';
+import * as tl from 'azure-pipelines-task-lib/task';
+import * as trm from 'azure-pipelines-task-lib/toolrunner';
+import * as toolLib from '../../_build/tool';
 
 let cachePath = path.join(process.cwd(), 'CACHE');
 let tempPath = path.join(process.cwd(), 'TEMP');
 
 describe('Tool Tests', function () {
     before(function () {
-
+        nock('http://microsoft.com')
+            .persist()
+            .get('/bytes/35')
+            .reply(200, {
+                username: 'abc',
+                password: 'def'
+                });
     });
 
     after(function () {
@@ -42,16 +49,14 @@ describe('Tool Tests', function () {
         });
     }
 
-    it('downloads a 100 byte file', function () {
-        this.timeout(5000);
-
+    it('downloads a 35 byte file', function () {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
-                assert.equal(fs.statSync(downPath).size, 100, 'downloaded file is the correct size');
+                assert.equal(fs.statSync(downPath).size, 35, 'downloaded file is the correct size');
 
                 resolve();
             }
@@ -61,16 +66,21 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('downloads a 100 byte file after a redirect', function () {
-        this.timeout(5000);
+    it('downloads a 35 byte file after a redirect', function () {
+        nock('http://microsoft.com') 
+            .get('/redirect-to')
+            .reply(303, undefined, {
+                location:'http://microsoft.com/bytes/35'
+            });
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=http%3A%2F%2Fhttpbin.org%2Fbytes%2F100&status_code=302");
+                
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/redirect-to");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
-                assert.equal(fs.statSync(downPath).size, 100, 'downloaded file is the correct size');
+                assert.equal(fs.statSync(downPath).size, 35, 'downloaded file is the correct size');
 
                 resolve();
             }
@@ -81,13 +91,11 @@ describe('Tool Tests', function () {
     });
 
     it('downloads to an aboslute path', function () {
-        this.timeout(5000);
-
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
                 let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", aboslutePath);
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35", aboslutePath);
                 toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -101,12 +109,17 @@ describe('Tool Tests', function () {
         });
     });
 
-
-    
     it('has status code in exception dictionary for HTTP error code responses', async function() {
+        nock('http://microsoft.com')
+            .get('/bytes/bad')
+            .reply(400, {
+                username: 'bad',
+                password: 'file'
+            });
+
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let errorCodeUrl: string = "https://httpbin.org/status/400";
+                let errorCodeUrl: string = "http://microsoft.com/bytes/bad";
                 let downPath: string = await toolLib.downloadTool(errorCodeUrl);
 
                 reject('a file was downloaded but it shouldnt have been');
@@ -120,9 +133,14 @@ describe('Tool Tests', function () {
     });
 
     it('works with redirect code 302', async function () {
+        nock('http://microsoft.com') 
+            .get('/redirect-to')
+            .reply(302, undefined, {
+                location:'http://microsoft.com/bytes/35'
+            });
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let statusCodeUrl: string = "https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F&status_code=302";
+                let statusCodeUrl: string = "http://microsoft.com/redirect-to";
                 let downPath: string = await toolLib.downloadTool(statusCodeUrl);
 
                 resolve();
@@ -148,11 +166,9 @@ describe('Tool Tests', function () {
   // });
 
     it('installs a binary tool and finds it', function () {
-        this.timeout(2000);
-
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -175,7 +191,7 @@ describe('Tool Tests', function () {
 
     if (process.platform == 'win32') {
         it('installs a 7z and finds it', function () {
-            this.timeout(2000);
+            this.timeout(20000);
 
             return new Promise<void>(async (resolve, reject) => {
                 try {
@@ -196,6 +212,46 @@ describe('Tool Tests', function () {
                     assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
                     assert(tl.exist(path.join(toolPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt exists');
                     assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+
+                    resolve();
+                }
+                catch (err) {
+                    reject(err);
+                }
+            });
+        });
+
+        it('extract 7z using custom 7z tool', function () {
+            this.timeout(20000);
+
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    let tempDir = path.join(__dirname, 'test-extract-7z-using-custom-7z-tool');
+                    tl.mkdirP(tempDir);
+
+                    // create mock7zr.cmd
+                    let mock7zrPath: string = path.join(tempDir, 'mock7zr.cmd');
+                    fs.writeFileSync(
+                        mock7zrPath,
+                        [
+                            'echo %* > "%~dp0mock7zr-args.txt"',
+                            `"${path.join(__dirname, '../..', 'externals', '7zdec.exe')}" x %5`
+                        ].join('\r\n'));
+
+                    // copy the 7z file to the test dir
+                    let _7zFile: string = path.join(tempDir, 'test.7z');
+                    tl.cp(path.join(__dirname, 'data', 'test.7z'), _7zFile);
+
+                    // extract
+                    let extPath: string = await toolLib.extract7z(_7zFile, null, mock7zrPath);
+
+                    // assert
+                    assert(tl.exist(extPath), 'found tool does not exist');
+                    assert(tl.exist(path.join(tempDir, 'mock7zr-args.txt')), 'mock7zr-args.txt does not exist');
+                    assert.equal(fs.readFileSync(path.join(tempDir, 'mock7zr-args.txt')).toString().trim(), `x -bb1 -bd -sccUTF-8 ${_7zFile}`);
+                    assert(tl.exist(path.join(extPath, 'file.txt')), 'file.txt does not exist');
+                    assert(tl.exist(path.join(extPath, 'file-with-ç-character.txt')), 'file-with-ç-character.txt does not exist');
+                    assert(tl.exist(path.join(extPath, 'folder', 'nested-file.txt')), 'nested-file.txt does not exist');
 
                     resolve();
                 }
@@ -256,13 +312,64 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('finds and evaluates local tool version', function () {
+    it('installs a zip and extracts it to specified directory', function () {
         this.timeout(2000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let tempDir = path.join(__dirname, 'test-install-zip');
+                tl.mkdirP(tempDir);
+
+                // stage the layout for a zip file:
+                //   file.txt
+                //   folder/nested-file.txt
+                let stagingDir = path.join(tempDir, 'zip-staging');
+                tl.mkdirP(path.join(stagingDir, 'folder'));
+                fs.writeFileSync(path.join(stagingDir, 'file.txt'), '');
+                fs.writeFileSync(path.join(stagingDir, 'folder', 'nested-file.txt'), '');
+
+                // create the zip
+                let zipFile = path.join(tempDir, 'test.zip');
+                if (process.platform == 'win32') {
+                    let escapedStagingPath = stagingDir.replace(/'/g, "''") // double-up single quotes
+                    let escapedZipFile = zipFile.replace(/'/g, "''");
+                    let powershell = tl.tool(tl.which('powershell', true))
+                        .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
+                        .arg(`$ErrorActionPreference = 'Stop' ; Add-Type -AssemblyName System.IO.Compression.FileSystem ; [System.IO.Compression.ZipFile]::CreateFromDirectory('${escapedStagingPath}', '${escapedZipFile}')`);
+                    powershell.execSync();
+                }
+                else {
+                    let zip = tl.tool('zip')
+                        .arg(zipFile)
+                        .arg('-r')
+                        .arg('.');
+                    zip.execSync(<trm.IExecOptions>{ cwd: stagingDir });
+                }
+
+                let destDir = path.join(__dirname, 'unzip-dest');
+                tl.mkdirP(destDir);
+
+                let extPath: string = await toolLib.extractZip(zipFile, destDir);
+                toolLib.cacheDir(extPath, 'foo', '1.1.0');
+                let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
+                assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
+                assert(tl.exist(path.join(toolPath, 'file.txt')), 'file.txt exists');
+                assert(tl.exist(path.join(toolPath, 'folder', 'nested-file.txt')), 'nested-file.txt exists');
+
+                resolve();
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('finds and evaluates local tool version', function () {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                let downPath1_1: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
+                let downPath1_2: string = await toolLib.downloadTool("http://microsoft.com/bytes/35");
 
                 toolLib.cacheFile(downPath1_1, 'foo', 'foo', '1.1.0');
                 toolLib.cacheFile(downPath1_2, 'foo', 'foo', '1.2.0');

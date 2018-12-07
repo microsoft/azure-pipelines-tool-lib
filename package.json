@@ -1,16 +1,17 @@
 {
-  "name": "vsts-task-tool-lib",
-  "version": "0.8.1",
-  "description": "VSTS Tool Installer Lib for CI/CD Tasks",
+  "name": "azure-pipelines-tool-lib",
+  "version": "0.10.1",
+  "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
   "scripts": {
     "build": "node make.js build",
     "test": "node make.js test",
-    "sample": "node make.js sample"
+    "sample": "node make.js sample",
+    "units": "node make.js units"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/microsoft/vsts-task-installer-lib.git"
+    "url": "git+https://github.com/microsoft/azure-pipelines-tool-lib.git"
   },
   "keywords": [
     "VSTS"
@@ -18,21 +19,22 @@
   "author": "Microsoft",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/microsoft/vsts-task-installer-lib/issues"
+    "url": "https://github.com/microsoft/azure-pipelines-tool-lib/issues"
   },
-  "homepage": "https://github.com/microsoft/vsts-task-installer-lib#readme",
+  "homepage": "https://github.com/microsoft/azure-pipelines-tool-lib#readme",
   "dependencies": {
-    "semver": "^5.3.0",
     "@types/semver": "^5.3.0",
-    "semver-compare": "^1.0.0",
-    "typed-rest-client": "1.0.7",
-    "uuid": "^3.0.1",
     "@types/uuid": "^3.0.1",
-    "vsts-task-lib": "2.0.6"
+    "azure-pipelines-task-lib": "^2.7.1",
+    "semver": "^5.3.0",
+    "semver-compare": "^1.0.0",
+    "typed-rest-client": "1.0.9",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
     "@types/node": "^8.0.19",
+    "nock": "9.6.1",
     "mocha": "^3.2.0",
     "@types/mocha": "^2.2.41",
     "shelljs": "^0.7.6",
