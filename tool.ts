@@ -232,7 +232,7 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
                 tl.debug(`Download attempt "${retryCount}" of "${maxRetries}" failed with status code "${response.message.statusCode}".`);
                 retryCount += 1;
                 await delay(1000);
-                tl.debug(`Downloading attempt "${retryCount}" of "${maxRetries}"`)
+                tl.debug(`Downloading attempt "${retryCount}" of "${maxRetries}"`);
                 response = await http.get(url);
             }
             
