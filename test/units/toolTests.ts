@@ -428,4 +428,48 @@ describe('Tool Tests', function () {
             }
         });
     });
+
+    it("works with a 502 temporary failure", async function() {
+        this.timeout(5000);
+        nock('http://microsoft.com')
+            .get('/temp502')
+            .twice()
+            .reply(502, undefined);
+        nock('http://microsoft.com')
+            .get('/temp502')
+            .reply(200, undefined);
+
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                let statusCodeUrl: string = "http://microsoft.com/temp502";
+                let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    });
+
+    it("doesn't retry 502s more than 3 times", async function() {
+        this.timeout(5000);
+        nock('http://microsoft.com')
+            .get('/perm502')
+            .times(3)
+            .reply(502, undefined);
+
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                let statusCodeUrl: string = "http://microsoft.com/perm502";
+                let downPath: string = await toolLib.downloadTool(statusCodeUrl);
+
+                reject('Shouldnt have succeeded');
+            } catch (err) {
+                if (err['httpStatusCode'] && err['httpStatusCode'] == 502) {
+                    resolve();
+                }
+                reject(err);
+            }
+        });
+    });
 });

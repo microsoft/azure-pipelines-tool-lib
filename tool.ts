@@ -45,6 +45,10 @@ export function prependPath(toolPath: string) {
     console.log('##vso[task.prependpath]' + toolPath);
 }
 
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 //-----------------------------
 // Version Functions
 //-----------------------------
@@ -217,10 +221,21 @@ export async function downloadTool(url: string, fileName?: string): Promise<stri
             if (fs.existsSync(destPath)) {
                 throw new Error("Destination file path already exists");
             }
-
-            // TODO: retries
+            
             tl.debug('downloading');
+            const statusCodesToRetry = [httpm.HttpCodes.BadGateway, httpm.HttpCodes.ServiceUnavailable, httpm.HttpCodes.GatewayTimeout];
+            let retryCount: number = 1;
+            const maxRetries: number = 3;
             let response: httpm.HttpClientResponse = await http.get(url);
+
+            while(retryCount < maxRetries && statusCodesToRetry.indexOf(response.message.statusCode) > -1) {
+                tl.debug(`Download attempt "${retryCount}" of "${maxRetries}" failed with status code "${response.message.statusCode}".`);
+                retryCount += 1;
+                await delay(1000);
+                tl.debug(`Downloading attempt "${retryCount}" of "${maxRetries}"`);
+                response = await http.get(url);
+            }
+            
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
