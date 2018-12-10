@@ -162,8 +162,7 @@ target.units = function () {
 target.test = function () {
     target.build();
 
-    console.log("-------Unit Tests-------");
-    run('tsc -p ./test/units --outDir ' + unitPath, true);
+    target.units();
 
     console.log("-------Other Tests-------");
     run('tsc -p ./test/tests --outDir ' + testPath, true);
