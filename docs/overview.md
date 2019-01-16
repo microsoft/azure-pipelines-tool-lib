@@ -139,6 +139,3 @@ async function installNodeOnLinux() {
 }
 ```
 
-Interesting discussion around urls changing from a vendor.  We can always patch tasks or we could externalize the formats.  Taking simplest approach right now (knowledge baked into the installer).
-
-
