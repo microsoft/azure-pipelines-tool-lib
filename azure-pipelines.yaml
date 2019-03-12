@@ -2,6 +2,9 @@
 # Build and test node typescript app with node8
 # on Ubuntu, VS2017 and Mac hosted VMs
 #------------------------------------------------------
+trigger:
+- master
+- features/*
 
 jobs:
 - job: 'Ubuntu_1604'
