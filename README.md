@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/ms/azure-pipelines-tool-lib/_apis/build/status/Microsoft.azure-pipelines-tool-lib?branchName=master)](https://dev.azure.com/ms/azure-pipelines-tool-lib/_build/latest?definitionId=92&branchName=master)
+
 # Azure Pipelines Tool Installer SDK
 
 Tool installer tasks SDK for [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
