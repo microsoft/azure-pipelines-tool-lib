@@ -3,6 +3,7 @@ import path = require('path');
 import fs = require('fs');
 import shell = require('shelljs');
 import os = require('os');
+import hm = require('typed-rest-client/Handlers');
 
 import * as mocha from 'mocha';
 process.env['AGENT_VERSION'] = '2.115.0';
@@ -168,6 +169,40 @@ describe('Tool Tests', function () {
             }
             catch (err) {
                 reject(err);
+            }
+        });
+    });
+
+    it('download with basic authentication', function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async (resolve, reject) => {
+            // General parameters:
+            let username = "usr";
+            let correctPassword = "pass";
+            let url = "http://httpbin.org/basic-auth/" + username + "/" + correctPassword;
+
+            // First try downloading with WRONG credentials and verify receiving status code 401:
+            try {
+                let basicAuthHandler = [new hm.BasicCredentialHandler(username, "WrongPassword")];
+                let downPath: string = await toolLib.downloadTool(url, null, basicAuthHandler);
+
+                reject(new Error('Should have received status code 401 when downloading with bad credentials'));
+            }
+            catch (err){
+                try {
+                    assert.equal(err['httpStatusCode'], 401, 'Should have received status code 401 when downloading with bad credentials');
+
+                    // Then try downloading with the CORRECT credentials and verify file downloaded:
+                    let basicAuthHandler = [new hm.BasicCredentialHandler(username, correctPassword)];
+                    let downPath: string = await toolLib.downloadTool(url, null, basicAuthHandler);
+
+                    assert(tl.exist(downPath), 'File should have been downloaded');
+                    resolve()
+                }
+                catch (err){
+                    reject(err);
+                }
             }
         });
     });
