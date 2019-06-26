@@ -17,7 +17,9 @@ let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
     proxy: tl.getHttpProxyConfiguration(),
-    cert: tl.getHttpCertConfiguration()
+    cert: tl.getHttpCertConfiguration(),
+    allowRetries: true,
+    maxRetries: 5
 } as ifm.IRequestOptions;
 tl.setResourcePath(path.join(__dirname, 'lib.json'));
 
