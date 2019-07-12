@@ -1,6 +1,6 @@
 {
   "name": "azure-pipelines-tool-lib",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
   "scripts": {
@@ -24,22 +24,22 @@
   "homepage": "https://github.com/microsoft/azure-pipelines-tool-lib#readme",
   "dependencies": {
     "@types/semver": "^5.3.0",
-    "@types/uuid": "^3.0.1",
+    "@types/uuid": "^3.4.5",
     "azure-pipelines-task-lib": "^2.8.0",
-    "semver": "^5.3.0",
+    "semver": "^5.7.0",
     "semver-compare": "^1.0.0",
-    "typed-rest-client": "1.0.9",
-    "uuid": "^3.0.1"
+    "typed-rest-client": "1.5.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "typescript": "3.1.5",
-    "@types/node": "^8.0.19",
-    "nock": "9.6.1",
-    "mocha": "^3.2.0",
     "@types/mocha": "^2.2.41",
+    "@types/node": "^8.10.50",
+    "@types/shelljs": "^0.7.9",
+    "@types/xml2js": "^0.4.4",
+    "mocha": "^3.2.0",
+    "nock": "9.6.1",
     "shelljs": "^0.7.6",
-    "@types/shelljs": "^0.7.4",
-    "xml2js": "^0.4.17",
-    "@types/xml2js": "^0.4.0"
+    "typescript": "3.1.5",
+    "xml2js": "^0.4.17"
   }
 }

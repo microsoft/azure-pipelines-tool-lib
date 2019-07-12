@@ -19,7 +19,7 @@ let requestOptions = {
     proxy: tl.getHttpProxyConfiguration(),
     cert: tl.getHttpCertConfiguration(),
     allowRetries: true,
-    maxRetries: 5
+    maxRetries: 3
 } as ifm.IRequestOptions;
 tl.setResourcePath(path.join(__dirname, 'lib.json'));
 
