@@ -69,18 +69,18 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('downloads to an aboslute path', function () {
+    it('downloads to an absolute path', function () {
         this.timeout(5000);
 
         return new Promise<void>(async(resolve, reject)=> {
             try {
                 let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
-                let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", aboslutePath);
+                let absolutePath: string = path.join(tempPath, tempDownloadFolder);
+                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", absolutePath);
                 toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
-                assert(aboslutePath == downPath);
+                assert(absolutePath == downPath);
 
                 resolve();
             }

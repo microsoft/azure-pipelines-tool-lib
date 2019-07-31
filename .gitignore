@@ -46,3 +46,6 @@ package-lock.json
 
 # Temp directories
 TEMP
+
+# VS Code Files
+.vscode
