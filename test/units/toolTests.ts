@@ -472,26 +472,4 @@ describe('Tool Tests', function () {
             }
         });
     });
-
-    it("Timeout closes socket", async function() {
-        this.timeout(5000);
-        nock('http://microsoft.com')
-            .get('/timeoutRetry')
-            .socketDelay(180001)
-            .reply(404, undefined)
-
-        return new Promise<void>(async (resolve, reject) => {
-            try {
-                let statusCodeUrl: string = "http://microsoft.com/timeoutRetry";
-                let downPath: string = await toolLib.downloadTool(statusCodeUrl);
-
-                reject("Shouldn't have succeeded");
-            } catch (err) {
-                if (err['httpStatusCode']) {
-                    reject("Socket should close on timeout")
-                }
-                resolve();
-            }
-        });
-    });
 });
