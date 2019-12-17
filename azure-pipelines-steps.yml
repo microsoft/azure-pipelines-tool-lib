@@ -1,14 +1,29 @@
 
 steps:
-# using cli
+
 - script: npm install
-  displayName: 'install'
+  displayName: 'npm install'
+
 - script: npm run build
-  displayName: 'build'
+  displayName: 'npm run build'
+
 # test with node 6
 - task: NodeTool@0
-  displayName: use node 6.10.3
+  displayName: Use Node 6.10.3
   inputs:
     versionSpec: "6.10.3"  
+
 - script: npm test
-  displayName: 'test'
+  displayName: 'npm test'
+
+
+
+
+# if master and windows, publish
+# - script: npm pack
+#   displayName: 'npm pack'
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['']))
+
+
+
+

@@ -3,8 +3,7 @@
 # on Ubuntu, VS2017 and Mac hosted VMs
 #------------------------------------------------------
 trigger:
-- master
-- features/*
+- *
 
 jobs:
 - job: 'Ubuntu_1604'
@@ -20,6 +19,25 @@ jobs:
 
   steps:
   - template: azure-pipelines-steps.yml
+
+  - script: npm pack
+    displayName: 'npm pack'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))'
+
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: '*.tgz' 
+      targetFolder: $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy npm package to staging'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: npm
+    displayName: 'Publish npm artifact'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))'
 
 - job: 'MacOS_1013'
   pool:
