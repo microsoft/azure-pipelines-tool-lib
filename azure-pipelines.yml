@@ -15,7 +15,7 @@ jobs:
 
   - script: npm pack
     displayName: 'npm pack'
-    condition: and(succeeded()
+    condition: and(succeeded())
     #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: CopyFiles@2
