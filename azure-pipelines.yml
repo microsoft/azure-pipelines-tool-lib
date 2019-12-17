@@ -25,6 +25,13 @@ jobs:
     displayName: 'Copy npm package to staging'
     #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Build.SourcesDirectory)'
+      contents: 'package.json' 
+      targetFolder: $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy package.json'
+
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)'
