@@ -15,15 +15,3 @@ steps:
 
 - script: npm test
   displayName: 'npm test'
-
-
-
-
-# if master and windows, publish
-# - script: npm pack
-#   displayName: 'npm pack'
-#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['']))
-
-
-
-
