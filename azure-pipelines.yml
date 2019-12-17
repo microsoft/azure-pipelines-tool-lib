@@ -15,7 +15,7 @@ jobs:
 
   - script: npm pack
     displayName: 'npm pack'
-    #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: CopyFiles@2
     inputs:
@@ -23,7 +23,7 @@ jobs:
       contents: '*.tgz' 
       targetFolder: $(Build.ArtifactStagingDirectory)
     displayName: 'Copy npm package to staging'
-    #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: CopyFiles@2
     inputs:
@@ -37,7 +37,7 @@ jobs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)'
       artifactName: npm
     displayName: 'Publish npm artifact'
-    #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - job: 'MacOS_1013'
   pool:
