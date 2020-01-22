@@ -17,7 +17,7 @@ The tool installers will leverage existing distribution mechanisms such as zips 
 
 Installers will just be another type of task.  The task library UI will have another tab as a sibling of build, test, deploy, and utilities.
 
-An installer task will:  
+An installer task will:
 
   - Advertise common or well known versions of a tool (LTS or common) via a combo dropdown
   - Find that version in a tools cache or acquires it on demand
@@ -26,7 +26,7 @@ An installer task will:
 
 ## Tool Cache
 
-The tool cache will be located under `_work/tools` but there's an environment variable `AGENT_TOOLSDIRECTORY` to override the location.  This is useful for scenarios such as our hosted image or offline agents which want to build a tools cache and direct the agent to use it: see 
+The tool cache will be located under `_work/_tool` but there's an environment variable `AGENT_TOOLSDIRECTORY` to override the location.  This is useful for scenarios such as our hosted image or offline agents which want to build a tools cache and direct the agent to use it.
 
 The cache will be keyed by name, version, and optionally platform (x86, x64).
 
@@ -55,7 +55,7 @@ The downloader should also be robust to virus scanners.
 
 ## Setting up the environment
 
-The tools folder will be pre-pended to the path.  This sets up the environment so subsequent tasks and scripts use the tool version specified.  For example, if npm 3.0 is chosen, it doesn't matter if subsequent execution is via the npm task, a cmd line task or a script.  It will be used.  This also keeps the tasks simple - use the tool in the path regardless if that's a result of a pre-requisite being installed or an installer task acquiring the tool.  
+The tools folder will be pre-pended to the path.  This sets up the environment so subsequent tasks and scripts use the tool version specified.  For example, if npm 3.0 is chosen, it doesn't matter if subsequent execution is via the npm task, a cmd line task or a script.  It will be used.  This also keeps the tasks simple - use the tool in the path regardless if that's a result of a pre-requisite being installed or an installer task acquiring the tool.
 
 The binary folder which will be used may not be directly under the root of the binaries.  As as example, node is in the bin folder and expects the libs to be in a sibling lib folder.  We should not manipulate the layout of the toolset.  The installer has first hand knowledge of that layout (might even vary by version) and knows what folder to prepend to the path (next section).
 
@@ -74,7 +74,7 @@ Chocolatey task:
 demands: [
     "chocolatey"
 ]
-``` 
+```
 
 Chocolatey tool installer task:
 ```JSON
@@ -100,7 +100,7 @@ Being able to multiply the builds using a set of runtime versions is useful for 
 
 To achieve this, add a tool installer task and for the version, reference a variable.  E.g. $(node.version).  In the node.version variable, specific a list of the versions and check the matrix build option on the build definitions option tab.
 
-## Safe Tool Execution under Multiple Agents 
+## Safe Tool Execution under Multiple Agents
 
 Some tools have caches of there own which when used by multiple agents on the same machine can lead to concurrency issues and failures.  Examples are nuget and npm which have cache locations which can be overriden by environment variables.  Since the tool installer has the first class knowledge of the tool, it can set the cache location.
 
