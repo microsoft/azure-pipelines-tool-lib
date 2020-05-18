@@ -35,7 +35,7 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/bytes/100");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -55,7 +55,7 @@ describe('Tool Tests', function () {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 
-                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=" + encodeURI('http://httpbin.org/bytes/100') + "&status_code=302");
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/redirect-to?url=" + encodeURI('https://httpbin.org/bytes/100') + "&status_code=302");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -76,7 +76,7 @@ describe('Tool Tests', function () {
             try {
                 let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
                 let absolutePath: string = path.join(tempPath, tempDownloadFolder);
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100", absolutePath);
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/bytes/100", absolutePath);
                 toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -125,7 +125,7 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath: string = await toolLib.downloadTool("https://httpbin.org/bytes/100");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -151,8 +151,8 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                let downPath1_1: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
-                let downPath1_2: string = await toolLib.downloadTool("http://httpbin.org/bytes/100");
+                let downPath1_1: string = await toolLib.downloadTool("https://httpbin.org/bytes/100");
+                let downPath1_2: string = await toolLib.downloadTool("https://httpbin.org/bytes/100");
 
                 toolLib.cacheFile(downPath1_1, 'foo', 'foo', '1.1.0');
                 toolLib.cacheFile(downPath1_2, 'foo', 'foo', '1.2.0');
@@ -180,7 +180,7 @@ describe('Tool Tests', function () {
             // General parameters:
             let username: string = "usr";
             let correctPassword: string = "pass";
-            let url: string = "http://httpbin.org/basic-auth/" + username + "/" + correctPassword;
+            let url: string = "https://httpbin.org/basic-auth/" + username + "/" + correctPassword;
 
             // First try downloading with WRONG credentials and verify receiving status code 401:
             try {
