@@ -449,7 +449,7 @@ export async function extractTar(file: string, destination?: string): Promise<st
     let dest = _createExtractFolder(destination);
 
     let tr: trm.ToolRunner = tl.tool('tar');
-    tr.arg(['xzC', dest, '-f', file]);
+    tr.arg(['xC', dest, '-f', file]);
 
     await tr.exec();
     return dest;
