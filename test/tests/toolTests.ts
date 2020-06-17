@@ -109,7 +109,7 @@ describe('Tool Tests', function () {
     it('works with redirect code 302', async function () {
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let statusCodeUrl: string = "https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F&status_code=302";
+                let statusCodeUrl: string = "https://httpbin.org/redirect-to?url=https%3A%2F%2Fexample.com%2F&status_code=302";
                 let downPath: string = await toolLib.downloadTool(statusCodeUrl);
 
                 resolve();
