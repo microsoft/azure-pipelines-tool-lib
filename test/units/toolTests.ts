@@ -76,7 +76,7 @@ describe('Tool Tests', function () {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 
-                let downPath: string = await toolLib.downloadTool("http://microsoft.com/redirect-to");
+                let downPath: string = await toolLib.downloadTool("https://microsoft.com/redirect-to");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -95,7 +95,7 @@ describe('Tool Tests', function () {
             try {
                 let tempDownloadFolder: string = 'temp_' + Math.floor(Math.random() * 2000000000);
                 let aboslutePath: string = path.join(tempPath, tempDownloadFolder);
-                let downPath: string = await toolLib.downloadTool("http://microsoft.com/bytes/35", aboslutePath);
+                let downPath: string = await toolLib.downloadTool("https://microsoft.com/bytes/35", aboslutePath);
                 toolLib.debug('downloaded path: ' + downPath);
                 
                 assert(tl.exist(downPath), 'downloaded file exists');
@@ -110,7 +110,7 @@ describe('Tool Tests', function () {
     });
 
     it('has status code in exception dictionary for HTTP error code responses', async function() {
-        nock('http://microsoft.com')
+        nock('https://microsoft.com')
             .get('/bytes/bad')
             .reply(400, {
                 username: 'bad',
@@ -119,7 +119,7 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async(resolve, reject)=> {
             try {
-                let errorCodeUrl: string = "http://microsoft.com/bytes/bad";
+                let errorCodeUrl: string = "https://microsoft.com/bytes/bad";
                 let downPath: string = await toolLib.downloadTool(errorCodeUrl);
 
                 reject('a file was downloaded but it shouldnt have been');
