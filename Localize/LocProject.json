@@ -1,0 +1,14 @@
+{
+  "Projects": [
+    {
+      "LocItems": [
+        {
+          "Languages": "de-de;en-US;es-es;fr-fr;it-IT;ja-jp;ko-KR;ru-RU;zh-CN;zh-TW",
+          "SourceFile": "Strings\\resources.resjson\\en-US\\resources.resjson",
+          "CopyOption": "LangIDOnPath",
+          "OutputPath": "Strings\\resources.resjson"
+        }
+      ]
+    }
+  ]
+}
