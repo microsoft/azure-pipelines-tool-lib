@@ -1,5 +1,7 @@
 name: localize-pipeline.yml
 
+trigger: none
+
 stages:
 - stage: __default
   jobs:
