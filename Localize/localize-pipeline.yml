@@ -3,7 +3,7 @@ name: $(Date:MMddyy)$(Rev:.rrrr)
 trigger: none
 
 variables:
-  system_accesstoken: $(System.AccessToken)
+  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 stages:
 - stage: __default
