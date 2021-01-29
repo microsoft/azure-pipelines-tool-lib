@@ -2,9 +2,6 @@ name: $(Date:MMddyy)$(Rev:.rrrr)
 
 trigger: none
 
-variables:
-  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
 stages:
 - stage: __default
   jobs:
@@ -21,7 +18,8 @@ stages:
         isCreatePrSelected: true
         prSourceBranchPrefix: 'locfiles'
         isAutoCompletePrSelected: false
-
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: drop'
 
