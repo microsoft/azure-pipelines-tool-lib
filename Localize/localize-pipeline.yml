@@ -15,9 +15,7 @@ stages:
         outDir: '$(Build.ArtifactStagingDirectory)'
         packageSourceAuth: 'patAuth'
         patVariable: '$(OneLocBuildPAT)'
-        isCreatePrSelected: true
-        prSourceBranchPrefix: 'locfiles'
-        isAutoCompletePrSelected: false
+        
       env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
