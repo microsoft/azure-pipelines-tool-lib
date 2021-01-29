@@ -2,6 +2,9 @@ name: $(Date:MMddyy)$(Rev:.rrrr)
 
 trigger: none
 
+variables:
+  system_accesstoken: $(System.AccessToken)
+
 stages:
 - stage: __default
   jobs:
