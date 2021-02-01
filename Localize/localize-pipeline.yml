@@ -1,4 +1,4 @@
-name: localize-pipeline.yml
+name: $(Date:MMddyy)$(Rev:.rrrr)
 
 trigger: none
 
@@ -15,7 +15,12 @@ stages:
         outDir: '$(Build.ArtifactStagingDirectory)'
         packageSourceAuth: 'patAuth'
         patVariable: '$(OneLocBuildPAT)'
-
+        isCreatePrSelected: true
+        prSourceBranchPrefix: 'locfiles'
+        isAutoCompletePrSelected: false
+        
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: drop'
 
