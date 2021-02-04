@@ -18,7 +18,8 @@ stages:
         isCreatePrSelected: true
         prSourceBranchPrefix: 'locfiles'
         isAutoCompletePrSelected: false
-
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: drop'
 
