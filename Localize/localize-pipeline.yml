@@ -16,11 +16,11 @@ stages:
         packageSourceAuth: 'patAuth'
         patVariable: '$(OneLocBuildPAT)'
         isCreatePrSelected: true
-        prSourceBranchPrefix: 'locfiles'
+        repoType: 'gitHub'
+        prSourceBranchPrefix: 'Localize'
+        gitHubPatVariable: '$(GitHubPAT)'
         isAutoCompletePrSelected: false
-        
       env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: drop'
-
