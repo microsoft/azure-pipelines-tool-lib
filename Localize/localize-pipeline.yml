@@ -15,12 +15,7 @@ stages:
         outDir: '$(Build.ArtifactStagingDirectory)'
         packageSourceAuth: 'patAuth'
         patVariable: '$(OneLocBuildPAT)'
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'Get-Content -Path "C:\Repos\SWLoc\src\OneLocBuild\OneLocBuildClient\Program.cs"'
-      env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: drop'
 
