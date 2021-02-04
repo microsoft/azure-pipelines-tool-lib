@@ -9,20 +9,16 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
-    - task: PowerShell@2
-      inputs:
-        targetType: 'inline'
-        script: 'Get-Content -Path "C:\Repos\SWLoc\src\OneLocBuild\OneLocBuildClient\Program.cs"'
     - task: OneLocBuild@2
       inputs:
         locProj: 'Localize/LocProject.json'
         outDir: '$(Build.ArtifactStagingDirectory)'
         packageSourceAuth: 'patAuth'
         patVariable: '$(OneLocBuildPAT)'
-        isCreatePrSelected: true
-        prSourceBranchPrefix: 'locfiles'
-        isAutoCompletePrSelected: false
-        
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'Get-Content -Path "C:\Repos\SWLoc\src\OneLocBuild\OneLocBuildClient\Program.cs"'
       env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     - task: PublishBuildArtifacts@1
