@@ -17,6 +17,10 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
+
+    - checkout: self
+      persistCredentials: true
+
     - powershell: |
         $sprintInfo = Invoke-WebRequest https://whatsprintis.it -Headers @{"Accept"= "application/json"} | ConvertFrom-Json
         Write-Host "##vso[task.setvariable variable=week]$($sprintInfo.week)"
