@@ -1,7 +1,7 @@
 {
-  "loc.messages.TOOL_LIB_CachingTool": "正在缓存工具: %s %s %s",
-  "loc.messages.TOOL_LIB_Downloading": "正在下载: %s",
-  "loc.messages.TOOL_LIB_ExtractingArchive": "正在提取存档",
-  "loc.messages.TOOL_LIB_FoundInCache": "在缓存中找到工具: %s %s %s",
-  "loc.messages.TOOL_LIB_PrependPath": "正在目录中预置 PATH 环境变量: %s"
+  "loc.messages.TOOL_LIB_CachingTool": "Caching tool: %s %s %s",
+  "loc.messages.TOOL_LIB_Downloading": "Downloading: %s",
+  "loc.messages.TOOL_LIB_ExtractingArchive": "Extracting archive",
+  "loc.messages.TOOL_LIB_FoundInCache": "Found tool in cache: %s %s %s",
+  "loc.messages.TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s"
 }
