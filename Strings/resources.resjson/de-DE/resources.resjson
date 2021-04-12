@@ -1,7 +1,7 @@
 {
-  "loc.messages.TOOL_LIB_CachingTool": "Caching tool: %s %s %s",
-  "loc.messages.TOOL_LIB_Downloading": "Downloading: %s",
-  "loc.messages.TOOL_LIB_ExtractingArchive": "Extracting archive",
-  "loc.messages.TOOL_LIB_FoundInCache": "Found tool in cache: %s %s %s",
-  "loc.messages.TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s"
+  "loc.messages.TOOL_LIB_CachingTool": "Tool wird zwischengespeichert: %s %s %s",
+  "loc.messages.TOOL_LIB_Downloading": "Wird heruntergeladen: %s",
+  "loc.messages.TOOL_LIB_ExtractingArchive": "Archiv wird extrahiert",
+  "loc.messages.TOOL_LIB_FoundInCache": "Tool im Zwischenspeicher gefunden: %s %s %s",
+  "loc.messages.TOOL_LIB_PrependPath": "Vorangestellte PATH-Umgebungsvariable mit Verzeichnis: %s"
 }
