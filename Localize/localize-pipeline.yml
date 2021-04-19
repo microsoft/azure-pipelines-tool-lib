@@ -42,10 +42,10 @@ stages:
         git merge origin/master
         git push origin Localization
       displayName: "Sync with master branch"
-      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual'))
+      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual')))
 
     - task: OneLocBuild@2
-      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual'))
+      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual')))
       inputs:
         locProj: 'Localize/LocProject.json'
         outDir: '$(Build.ArtifactStagingDirectory)'
@@ -60,7 +60,7 @@ stages:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
     - task: PublishBuildArtifacts@1
-      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual'))
+      condition: and(succeeded(), or(eq(variables['build.reason'], 'Schedule'), eq(variables['build.reason'], 'Manual')))
       displayName: 'Publish an artifact'
 
     - powershell: |
@@ -86,7 +86,7 @@ stages:
       env:
         GH_TOKEN: '$(GitHubPAT)'
       displayName: Open a PR
-      condition: and(succeeded(), or(and(variables['SHOULDCREATEPR'], 'True'), eq(variables['build.reason'], 'Schedule')), eq(variables['build.reason'], 'Manual')))
+      condition: and(succeeded(), or(and(eq(variables['SHOULDCREATEPR'], 'True'), eq(variables['build.reason'], 'Schedule')), eq(variables['build.reason'], 'Manual')))
     
     - powershell: |
         $message="Created tool-lib localization update PR. Someone please approve/merge it. :please-puss-in-boots: $env:PR_LINK"
