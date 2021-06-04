@@ -3,7 +3,7 @@ steps:
 - task: NodeTool@0
   displayName: Use Node 10.x
   inputs:
-    versionSpec: "10.x"  
+    versionSpec: "10.24.1"
 
 - script: npm install
   displayName: 'npm install'
