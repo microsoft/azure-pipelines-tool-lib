@@ -1,9 +1,9 @@
 steps:
 
 - task: NodeTool@0
-  displayName: Use Node 6.10.3
+  displayName: Use Node 8.9.1
   inputs:
-    versionSpec: "6.10.3"
+    versionSpec: "v8.9.1"
 
 - script: npm install
   displayName: 'npm install'
