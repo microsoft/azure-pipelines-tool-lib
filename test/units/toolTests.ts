@@ -249,7 +249,7 @@ describe('Tool Tests', function () {
     }
 
     it('installs a zip and finds it', function () {
-        this.timeout(2000);
+        this.timeout(10000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -299,7 +299,7 @@ describe('Tool Tests', function () {
     });
 
     it('installs a zip and extracts it to specified directory', function () {
-        this.timeout(2000);
+        this.timeout(10000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
