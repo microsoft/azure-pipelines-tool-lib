@@ -43,7 +43,7 @@ describe('Tool Tests', function () {
             this.timeout(1000);
 
             console.log('node version: ' + process.version);
-            assert(process.version == 'v5.10.1' || process.version == 'v6.10.3' || process.version == 'v8.9.1', 'expected node v5.10.1, v6.10.3, or v8.9.1. actual: ' + process.version);
+            assert(process.version == 'v10.24.1', 'expected node v10.24.1. actual: ' + process.version);
 
             done();
         });
@@ -249,7 +249,7 @@ describe('Tool Tests', function () {
     }
 
     it('installs a zip and finds it', function () {
-        this.timeout(2000);
+        this.timeout(10000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -299,7 +299,7 @@ describe('Tool Tests', function () {
     });
 
     it('installs a zip and extracts it to specified directory', function () {
-        this.timeout(2000);
+        this.timeout(10000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
