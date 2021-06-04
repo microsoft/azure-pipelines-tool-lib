@@ -35,7 +35,7 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.10.50",
     "@types/shelljs": "^0.7.9",
-    "@types/xml2js": "^0.4.4",
+    "@types/xml2js": "0.4.4",
     "mocha": "^3.2.0",
     "nock": "9.6.1",
     "shelljs": "^0.8.4",
