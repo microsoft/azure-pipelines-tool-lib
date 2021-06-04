@@ -8,6 +8,8 @@ steps:
 - script: npm install
   displayName: 'npm install'
 
+- bash: cat ./package-lock.json
+
 - script: npm run build
   displayName: 'npm run build'
 
