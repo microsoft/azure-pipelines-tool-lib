@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\1\s\Strings\resources.resjson\en-US\resources.resjson" PsrId="306" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+<LCX SchemaVersion="6.0" Name="D:\a\1\s\Strings\resources.resjson\en-US\resources.resjson" PsrId="306" FileType="1" SrcCul="en-US" TgtCul="de-DE" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Caching tool: %s %s %s]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[도구를 캐시하는 중: %s %s %s]]></Val>
+            <Val><![CDATA[Tool wird zwischengespeichert: %s %s %s]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -22,7 +22,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Downloading: %s]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[다운로드 중: %s]]></Val>
+            <Val><![CDATA[Wird heruntergeladen: %s]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -31,7 +31,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Extracting archive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[보관 파일의 압축을 푸는 중]]></Val>
+            <Val><![CDATA[Archiv wird extrahiert]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -40,7 +40,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Found tool in cache: %s %s %s]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[캐시에서 도구 발견: %s %s %s]]></Val>
+            <Val><![CDATA[Tool im Zwischenspeicher gefunden: %s %s %s]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -49,7 +49,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Prepending PATH environment variable with directory: %s]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[PATH 환경 변수 앞에 %s 디렉터리 추가]]></Val>
+            <Val><![CDATA[Vorangestellte PATH-Umgebungsvariable mit Verzeichnis: %s]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
