@@ -1,5 +1,5 @@
 jobs:
-- job: 'Ubuntu_1604'
+- job: 'Ubuntu_1804'
   pool:
     vmImage: 'Ubuntu-18.04'
 
