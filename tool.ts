@@ -197,8 +197,9 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * @param url       url of tool to download
  * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  * @param handlers  optional handlers array.  Auth handlers to pass to the HttpClient for the tool download.
+ * @param auth      optional custom auth header value.  This is passed as a HTTP header to the download client.
  */
-export async function downloadTool(url: string, fileName?: string, handlers?: ifm.IRequestHandler[]): Promise<string> {
+export async function downloadTool(url: string, fileName?: string, handlers?: ifm.IRequestHandler[], auth?: string): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             handlers = handlers || null;
@@ -226,7 +227,13 @@ export async function downloadTool(url: string, fileName?: string, handlers?: if
             if (fs.existsSync(destPath)) {
                 throw new Error("Destination file path already exists");
             }
-            
+
+            const additionalHeaders: ifm.IHeaders = {};
+            if (auth) {
+                tl.debug('adding authorization header');
+                additionalHeaders['Authorization'] = auth;
+            }
+
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url);
             
