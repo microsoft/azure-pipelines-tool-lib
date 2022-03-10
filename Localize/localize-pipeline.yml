@@ -96,13 +96,13 @@ stages:
     # Notifications are set by POST method to MS Teams webhook
     # Body of message is compiled as Office 365 connector card
     # More details about cards - https://docs.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference#office-365-connector-card
-    - powershell: .\send-notifications.ps1 -IsPRCreated $true -RepoName "Task-tool"
+    - powershell: .\send-notifications.ps1 -IsPRCreated $true -RepoName "Tool-lib"
       env:
         TEAMS_WEBHOOK: $(MSTeamsUri)
       displayName: 'Send MS Teams notification about PR opened'
       condition: and(succeeded(), eq(variables['SHOULDCREATEPR'], 'True'), eq(variables['build.reason'], 'Schedule'))
 
-    - powershell: .\send-notifications.ps1 -IsPRCreated $false -RepoName "Task-tool"
+    - powershell: .\send-notifications.ps1 -IsPRCreated $false -RepoName "Tool-lib"
       env:
         TEAMS_WEBHOOK: $(MSTeamsUri)
       displayName: 'Send MS Teams notification about error'
