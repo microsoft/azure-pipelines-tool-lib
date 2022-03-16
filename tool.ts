@@ -197,7 +197,7 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * @param url                url of tool to download
  * @param fileName           optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  * @param handlers           optional handlers array.  Auth handlers to pass to the HttpClient for the tool download.
- * @param additionalHeaders  optional custom HTTPheaders.  This is passed to the download client.
+ * @param additionalHeaders  optional custom HTTP headers.  This is passed to the download client.
  */
 export async function downloadTool(
     url: string,
