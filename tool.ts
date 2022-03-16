@@ -235,7 +235,7 @@ export async function downloadTool(url: string, fileName?: string, handlers?: if
             }
 
             tl.debug('downloading');
-            let response: httpm.HttpClientResponse = await http.get(url);
+            let response: httpm.HttpClientResponse = await http.get(url, additionalHeaders);
             
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
