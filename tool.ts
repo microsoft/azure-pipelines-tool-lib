@@ -214,12 +214,10 @@ export async function downloadTool(
 
             // check if it's an absolute path already
             var destPath: string;
-            if(path.isAbsolute(fileName))
-            {
+            if (path.isAbsolute(fileName)) {
                 destPath = fileName;
             }
-            else
-            {
+            else {
                 destPath = path.join(_getAgentTemp(), fileName);
             }
 
@@ -235,12 +233,18 @@ export async function downloadTool(
 
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url, additionalHeaders);
-            
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
                 tl.debug(`Failed to download "${fileName}" from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
                 throw err;
+            }
+
+            let downloadedContentLength = parseInt(response.message.headers['content-length']);
+            if (!isNaN(downloadedContentLength)) {
+                tl.debug(`Content-Length of downloaded file: ${downloadedContentLength}`);
+            } else {
+                tl.debug(`Content-Length header missing.`);
             }
 
             tl.debug('creating stream');
@@ -250,6 +254,21 @@ export async function downloadTool(
                     let stream = response.message.pipe(file);
                     stream.on('close', () => {
                         tl.debug('download complete');
+                        file.end();
+                        let fileSizeInBytes: number;
+                        try {
+                            fileSizeInBytes = fs.statSync(destPath).size;
+                            tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
+                        }
+                        catch (err) {
+                            tl.debug(`Unable to find file size for ${destPath}`);
+                        }
+
+                        if (downloadedContentLength &&
+                            fileSizeInBytes &&
+                            fileSizeInBytes !== downloadedContentLength) {
+                                reject(new Error(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`));
+                        }
                         resolve(destPath);
                     });
                 }
@@ -260,7 +279,7 @@ export async function downloadTool(
             file.on('error', (err) => {
                 file.end();
                 reject(err);
-            })
+            });
         }
         catch (error) {
             reject(error);
@@ -502,7 +521,7 @@ function _createExtractFolder(dest?: string): string {
     }
 
     tl.mkdirP(dest);
-    
+
     return dest;
 }
 
