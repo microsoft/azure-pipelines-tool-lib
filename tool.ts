@@ -194,11 +194,17 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
 /**
  * Download a tool from an url and stream it into a file
  *
- * @param url       url of tool to download
- * @param fileName  optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
- * @param handlers  optional handlers array.  Auth handlers to pass to the HttpClient for the tool download.
+ * @param url                url of tool to download
+ * @param fileName           optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
+ * @param handlers           optional handlers array.  Auth handlers to pass to the HttpClient for the tool download.
+ * @param additionalHeaders  optional custom HTTP headers.  This is passed to the REST client that downloads the tool.
  */
-export async function downloadTool(url: string, fileName?: string, handlers?: ifm.IRequestHandler[]): Promise<string> {
+export async function downloadTool(
+    url: string,
+    fileName?: string,
+    handlers?: ifm.IRequestHandler[],
+    additionalHeaders?: ifm.IHeaders
+): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
         try {
             handlers = handlers || null;
@@ -226,9 +232,9 @@ export async function downloadTool(url: string, fileName?: string, handlers?: if
             if (fs.existsSync(destPath)) {
                 throw new Error("Destination file path already exists");
             }
-            
+
             tl.debug('downloading');
-            let response: httpm.HttpClientResponse = await http.get(url);
+            let response: httpm.HttpClientResponse = await http.get(url, additionalHeaders);
             
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
