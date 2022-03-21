@@ -382,9 +382,10 @@ export async function cacheFile(sourceFile: string,
  * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
  * Be sure to check the current license agreement. If 7zr.exe is bundled with your task, then the path
  * to 7zr.exe can be pass to this function.
+ * @param overwriteDest Overwriting files in destination catalog. Optional.
  * @returns        path to the destination directory
  */
-export async function extract7z(file: string, dest?: string, _7zPath?: string): Promise<string> {
+export async function extract7z(file: string, dest?: string, _7zPath?: string, overwriteDest?: boolean): Promise<string> {
     if (process.platform != 'win32') {
         throw new Error('extract7z() not supported on current OS');
     }
@@ -402,12 +403,16 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string): 
 
         if (_7zPath) {
             // extract
-            let _7z: trm.ToolRunner = tl.tool(_7zPath)
-                .arg('x')         // eXtract files with full paths
-                .arg('-bb1')      // -bb[0-3] : set output log level
-                .arg('-bd')       // disable progress indicator
-                .arg('-sccUTF-8') // set charset for for console input/output
-                .arg(file);
+            let _7z: trm.ToolRunner = tl.tool(_7zPath);
+            if (overwriteDest) {
+                _7z.arg('-aoa');
+            }
+
+            _7z.arg('x')         // eXtract files with full paths
+               .arg('-bb1')      // -bb[0-3] : set output log level
+               .arg('-bd')       // disable progress indicator
+               .arg('-sccUTF-8') // set charset for for console input/output
+               .arg(file);
             await _7z.exec();
         }
         else {
