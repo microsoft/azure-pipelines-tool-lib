@@ -214,12 +214,10 @@ export async function downloadTool(
 
             // check if it's an absolute path already
             var destPath: string;
-            if(path.isAbsolute(fileName))
-            {
+            if (path.isAbsolute(fileName)) {
                 destPath = fileName;
             }
-            else
-            {
+            else {
                 destPath = path.join(_getAgentTemp(), fileName);
             }
 
@@ -235,13 +233,15 @@ export async function downloadTool(
 
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url, additionalHeaders);
-            
+
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
                 tl.debug(`Failed to download "${fileName}" from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
                 throw err;
             }
+
+            let downloadedContentLength = _getContentLengthOfDownloadedFile(response.message.headers['content-length']);
 
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
@@ -250,6 +250,13 @@ export async function downloadTool(
                     let stream = response.message.pipe(file);
                     stream.on('close', () => {
                         tl.debug('download complete');
+                        let fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                        if (!isNaN(downloadedContentLength) &&
+                            !isNaN(fileSizeInBytes) &&
+                            fileSizeInBytes !== downloadedContentLength) {
+                            reject(new Error(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`));
+                        }
+
                         resolve(destPath);
                     });
                 }
@@ -260,12 +267,36 @@ export async function downloadTool(
             file.on('error', (err) => {
                 file.end();
                 reject(err);
-            })
+            });
         }
         catch (error) {
             reject(error);
         }
     });
+}
+
+function _getContentLengthOfDownloadedFile(contentLengthHeader: string | undefined): number {
+    let parsedContentLength = parseInt(contentLengthHeader);
+    if (!isNaN(parsedContentLength)) {
+        tl.debug(`Content-Length of downloaded file: ${parsedContentLength}`);
+    } else {
+        tl.debug(`Content-Length header missing.`);
+    }
+
+    return parsedContentLength;
+}
+
+function _getFileSizeOnDisk(filePath: string): number {
+    try {
+        let fileStats = fs.statSync(filePath);
+        let fileSizeInBytes = fileStats.size;
+        tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
+        return fileSizeInBytes;
+    }
+    catch (err) {
+        tl.debug(`Unable to find file size for ${filePath}`);
+        return NaN;
+    }
 }
 
 //---------------------
@@ -502,7 +533,7 @@ function _createExtractFolder(dest?: string): string {
     }
 
     tl.mkdirP(dest);
-    
+
     return dest;
 }
 
