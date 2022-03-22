@@ -382,7 +382,7 @@ export async function cacheFile(sourceFile: string,
  * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
  * Be sure to check the current license agreement. If 7zr.exe is bundled with your task, then the path
  * to 7zr.exe can be pass to this function.
- * @param overwriteDest Overwriting files in destination catalog. Optional.
+ * @param overwriteDest Overwrite files in destination catalog. Optional.
  * @returns        path to the destination directory
  */
 export async function extract7z(file: string, dest?: string, _7zPath?: string, overwriteDest?: boolean): Promise<string> {
@@ -420,7 +420,7 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string, o
             let escapedScript = path.join(__dirname, 'Invoke-7zdec.ps1').replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
             let escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
             let escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-            let command: string = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`
+            let command: string = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}' -OverrideDestDirectory ${overwriteDest ? 1 : 0}`;
             let powershellPath = tl.which('powershell', true);
             let powershell: trm.ToolRunner = tl.tool(powershellPath)
                 .line('-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command')
