@@ -256,6 +256,12 @@ export async function downloadTool(
                     stream.on('close', () => {
                         tl.debug('download complete');
                         let fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                        if (!isNaN(fileSizeInBytes)) {
+                            tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
+                        } else {
+                            tl.debug(`File size on disk was not found`);
+                        }
+
                         if (!isNaN(downloadedContentLength) &&
                             !isNaN(fileSizeInBytes) &&
                             fileSizeInBytes !== downloadedContentLength) {
@@ -305,11 +311,9 @@ function _getFileSizeOnDisk(filePath: string): number {
     try {
         let fileStats = fs.statSync(filePath);
         let fileSizeInBytes = fileStats.size;
-        tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
         return fileSizeInBytes;
     }
     catch (err) {
-        tl.debug(`Unable to find file size for ${filePath}`);
         tl.warning(`Unable to find file size for ${filePath} due to error: ${err.Message}`);
         return NaN;
     }
