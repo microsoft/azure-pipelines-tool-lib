@@ -241,7 +241,12 @@ export async function downloadTool(
                 throw err;
             }
 
-            let downloadedContentLength = _getContentLengthOfDownloadedFile(response.message.headers['content-length']);
+            let downloadedContentLength = _getContentLengthOfDownloadedFile(response);
+            if (!isNaN(downloadedContentLength)) {
+                tl.debug(`Content-Length of downloaded file: ${downloadedContentLength}`);
+            } else {
+                tl.debug(`Content-Length header missing.`);
+            }
 
             tl.debug('creating stream');
             let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
@@ -275,17 +280,26 @@ export async function downloadTool(
     });
 }
 
-function _getContentLengthOfDownloadedFile(contentLengthHeader: string | undefined): number {
-    let parsedContentLength = parseInt(contentLengthHeader);
-    if (!isNaN(parsedContentLength)) {
-        tl.debug(`Content-Length of downloaded file: ${parsedContentLength}`);
-    } else {
-        tl.debug(`Content-Length header missing.`);
-    }
+//---------------------
+// Size functions
+//---------------------
 
+/**
+ * Gets size of downloaded file from "Content-Length" header
+ *
+ * @param response    response for request to get the file
+ */
+function _getContentLengthOfDownloadedFile(response: httpm.HttpClientResponse): number {
+    let contentLengthHeader = response.message.headers['content-length']
+    let parsedContentLength = parseInt(contentLengthHeader);
     return parsedContentLength;
 }
 
+/**
+ * Gets size of file saved to disk
+ *
+ * @param filePath    the path to the file, saved to the disk
+ */
 function _getFileSizeOnDisk(filePath: string): number {
     try {
         let fileStats = fs.statSync(filePath);
@@ -295,6 +309,7 @@ function _getFileSizeOnDisk(filePath: string): number {
     }
     catch (err) {
         tl.debug(`Unable to find file size for ${filePath}`);
+        tl.warning(`Unable to find file size for ${filePath} due to error: ${err.Message}`);
         return NaN;
     }
 }
