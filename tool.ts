@@ -259,7 +259,8 @@ export async function downloadTool(
                         if (!isNaN(downloadedContentLength) &&
                             !isNaN(fileSizeInBytes) &&
                             fileSizeInBytes !== downloadedContentLength) {
-                            reject(new Error(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`));
+                            let err: Error = new Error(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
+                            reject(err);
                         }
 
                         resolve(destPath);
