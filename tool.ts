@@ -255,7 +255,15 @@ export async function downloadTool(
                     let stream = response.message.pipe(file);
                     stream.on('close', () => {
                         tl.debug('download complete');
-                        let fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                        let fileSizeInBytes: number;
+                        try {
+                            fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                        }
+                        catch (err) {
+                            fileSizeInBytes = NaN;
+                            tl.warning(`Unable to check file size of ${destPath} due to error: ${err.Message}`);
+                        }
+
                         if (!isNaN(fileSizeInBytes)) {
                             tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
                         } else {
@@ -265,8 +273,7 @@ export async function downloadTool(
                         if (!isNaN(downloadedContentLength) &&
                             !isNaN(fileSizeInBytes) &&
                             fileSizeInBytes !== downloadedContentLength) {
-                            let err: Error = new Error(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
-                            reject(err);
+                            tl.warning(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
                         }
 
                         resolve(destPath);
@@ -308,15 +315,9 @@ function _getContentLengthOfDownloadedFile(response: httpm.HttpClientResponse): 
  * @param filePath    the path to the file, saved to the disk
  */
 function _getFileSizeOnDisk(filePath: string): number {
-    try {
-        let fileStats = fs.statSync(filePath);
-        let fileSizeInBytes = fileStats.size;
-        return fileSizeInBytes;
-    }
-    catch (err) {
-        tl.warning(`Unable to find file size for ${filePath} due to error: ${err.Message}`);
-        return NaN;
-    }
+    let fileStats = fs.statSync(filePath);
+    let fileSizeInBytes = fileStats.size;
+    return fileSizeInBytes;
 }
 
 //---------------------

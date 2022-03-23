@@ -132,29 +132,6 @@ describe('Tool Tests', function () {
         });
     });
 
-    it('different content-length and file size on disk', async function() {
-        const headers: nock.ReplyHeaders = { 'content-length': '200' };
-        nock('https://microsoft.com')
-            .get('/bytes/36')
-            .reply(200, {
-                username: 'bad',
-                password: 'size'
-            }, headers);
-
-        return new Promise<void>(async(resolve, reject)=> {
-            try {
-                let errorCodeUrl: string = "https://microsoft.com/bytes/36";
-                let downPath: string = await toolLib.downloadTool(errorCodeUrl);
-
-                reject('content-length of file and size of file on disk should not match, but they do');
-            } 
-            catch (err){
-                assert.equal(err.message, `Content-Length (200 bytes) did not match downloaded file size (36 bytes).`);
-                resolve();
-            }
-        });
-    });
-
     it('works with redirect code 302', async function () {
         nock('https://microsoft.com') 
             .get('/redirect-to')
