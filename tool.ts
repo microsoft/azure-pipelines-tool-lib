@@ -245,7 +245,7 @@ export async function downloadTool(
             if (!isNaN(downloadedContentLength)) {
                 tl.debug(`Content-Length of downloaded file: ${downloadedContentLength}`);
             } else {
-                tl.debug(`Content-Length header missing.`);
+                tl.debug(`Content-Length header missing`);
             }
 
             tl.debug('creating stream');
