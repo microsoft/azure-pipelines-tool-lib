@@ -4,7 +4,10 @@ param(
     [string]$Source,
 
     [Parameter(Mandatory = $true)]
-    [string]$Target)
+    [string]$Target,
+
+    [Parameter(Mandatory = $false)]
+    [boolean]$OverrideDestDirectory)
 
 # This script translates the output from 7zdec into UTF8. Node has limited
 # built-in support for encodings.
@@ -35,8 +38,9 @@ $writer = New-Object System.IO.StreamWriter($stdout, $utf8)
 Set-Location -LiteralPath $Target
 
 # Print the ##command.
+$overrideDest = $(If ($OverrideDestDirectory) { "-aoa" } Else { "" })
 $_7zdec = Join-Path -Path "$PSScriptRoot" -ChildPath "externals/7zdec.exe"
-[System.Console]::WriteLine("##[command]$_7zdec x `"$Source`"")
+[System.Console]::WriteLine("##[command]$_7zdec $overrideDest x `"$Source`"")
 
 # The $OutputEncoding variable instructs PowerShell how to interpret the output
 # from the external command.
