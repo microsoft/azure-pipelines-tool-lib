@@ -302,6 +302,7 @@ export async function downloadTool(
  * Gets size of downloaded file from "Content-Length" header
  *
  * @param response    response for request to get the file
+ * @returns number if the 'content-length' is not empty, otherwise NaN 
  */
 function _getContentLengthOfDownloadedFile(response: httpm.HttpClientResponse): number {
     let contentLengthHeader = response.message.headers['content-length']
@@ -313,6 +314,7 @@ function _getContentLengthOfDownloadedFile(response: httpm.HttpClientResponse): 
  * Gets size of file saved to disk
  *
  * @param filePath    the path to the file, saved to the disk
+ * @returns size of file saved to disk
  */
 function _getFileSizeOnDisk(filePath: string): number {
     let fileStats = fs.statSync(filePath);
