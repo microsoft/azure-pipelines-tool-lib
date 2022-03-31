@@ -214,12 +214,10 @@ export async function downloadTool(
 
             // check if it's an absolute path already
             var destPath: string;
-            if(path.isAbsolute(fileName))
-            {
+            if (path.isAbsolute(fileName)) {
                 destPath = fileName;
             }
-            else
-            {
+            else {
                 destPath = path.join(_getAgentTemp(), fileName);
             }
 
@@ -235,12 +233,19 @@ export async function downloadTool(
 
             tl.debug('downloading');
             let response: httpm.HttpClientResponse = await http.get(url, additionalHeaders);
-            
+
             if (response.message.statusCode != 200) {
                 let err: Error = new Error('Unexpected HTTP response: ' + response.message.statusCode);
                 err['httpStatusCode'] = response.message.statusCode;
                 tl.debug(`Failed to download "${fileName}" from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
                 throw err;
+            }
+
+            let downloadedContentLength = _getContentLengthOfDownloadedFile(response);
+            if (!isNaN(downloadedContentLength)) {
+                tl.debug(`Content-Length of downloaded file: ${downloadedContentLength}`);
+            } else {
+                tl.debug(`Content-Length header missing`);
             }
 
             tl.debug('creating stream');
@@ -250,6 +255,27 @@ export async function downloadTool(
                     let stream = response.message.pipe(file);
                     stream.on('close', () => {
                         tl.debug('download complete');
+                        let fileSizeInBytes: number;
+                        try {
+                            fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                        }
+                        catch (err) {
+                            fileSizeInBytes = NaN;
+                            tl.warning(`Unable to check file size of ${destPath} due to error: ${err.Message}`);
+                        }
+
+                        if (!isNaN(fileSizeInBytes)) {
+                            tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
+                        } else {
+                            tl.debug(`File size on disk was not found`);
+                        }
+
+                        if (!isNaN(downloadedContentLength) &&
+                            !isNaN(fileSizeInBytes) &&
+                            fileSizeInBytes !== downloadedContentLength) {
+                            tl.warning(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
+                        }
+
                         resolve(destPath);
                     });
                 }
@@ -260,12 +286,40 @@ export async function downloadTool(
             file.on('error', (err) => {
                 file.end();
                 reject(err);
-            })
+            });
         }
         catch (error) {
             reject(error);
         }
     });
+}
+
+//---------------------
+// Size functions
+//---------------------
+
+/**
+ * Gets size of downloaded file from "Content-Length" header
+ *
+ * @param response    response for request to get the file
+ * @returns number if the 'content-length' is not empty, otherwise NaN 
+ */
+function _getContentLengthOfDownloadedFile(response: httpm.HttpClientResponse): number {
+    let contentLengthHeader = response.message.headers['content-length']
+    let parsedContentLength = parseInt(contentLengthHeader);
+    return parsedContentLength;
+}
+
+/**
+ * Gets size of file saved to disk
+ *
+ * @param filePath    the path to the file, saved to the disk
+ * @returns size of file saved to disk
+ */
+function _getFileSizeOnDisk(filePath: string): number {
+    let fileStats = fs.statSync(filePath);
+    let fileSizeInBytes = fileStats.size;
+    return fileSizeInBytes;
 }
 
 //---------------------
@@ -508,7 +562,7 @@ function _createExtractFolder(dest?: string): string {
     }
 
     tl.mkdirP(dest);
-    
+
     return dest;
 }
 
