@@ -1,9 +1,9 @@
 steps:
 
 - task: NodeTool@0
-  displayName: Use Node 16.15.1
+  displayName: Use Node 10.x
   inputs:
-    versionSpec: "16.15.1"
+    versionSpec: "10.24.1"
 
 - script: npm install
   displayName: 'npm install'
