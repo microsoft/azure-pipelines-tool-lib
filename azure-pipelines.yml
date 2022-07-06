@@ -15,7 +15,7 @@ jobs:
 
   - script: npm pack
     displayName: 'npm pack'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
 
   - task: CopyFiles@2
     inputs:
@@ -25,14 +25,14 @@ jobs:
         'package.json'
       targetFolder: $(Build.ArtifactStagingDirectory)
     displayName: 'Copy npm package to staging'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
 
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)'
       artifactName: npm
     displayName: 'Publish npm artifact'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
 
 - job: 'MacOS_1015'
   pool:
