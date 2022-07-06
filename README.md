@@ -65,6 +65,14 @@ The tool cache will be in the _build folder.  To clear the cache, build again.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+## Current status
+
+Since at the moment work is proceeding on migrating to Node16, you need to remember the following:
+
+- master branch for SDK v1 (stable and targets Node10)
+- releases/2.x branch for SDK v2 (preview and targets Node16)
+- Changes that were merged for SDK v1 should be cherry-picked for SDK v2 once they are merged to the master branch
+
 ## Security issues
 
 Do you think there might be a security issue? Have you been phished or identified a security vulnerability? Please don't report it here - let us know by sending an email to secure@microsoft.com.
