@@ -13,26 +13,11 @@ jobs:
   steps:
   - template: azure-pipelines-steps.yml
 
-  - script: npm pack
-    displayName: 'npm pack'
-    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
-
-  - task: CopyFiles@2
+  - task: PublishPipelineArtifact@1
     inputs:
-      sourceFolder: '$(Build.SourcesDirectory)'
-      contents: |
-        '*.tgz'
-        'package.json'
-      targetFolder: $(Build.ArtifactStagingDirectory)
-    displayName: 'Copy npm package to staging'
-    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      artifactName: npm
-    displayName: 'Publish npm artifact'
-    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/releases/2.x'))
+      targetPath: '_build'
+      artifactType: 'pipeline'
+      artifactName: 'npm-package'
 
 - job: 'MacOS_1015'
   pool:
