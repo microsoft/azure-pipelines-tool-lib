@@ -6,6 +6,13 @@ jobs:
   steps:
   - template: azure-pipelines-steps.yml
 
+- job: 'Ubuntu_2204'
+  pool:
+    vmImage: 'ubuntu-22.04'
+
+  steps:
+  - template: azure-pipelines-steps.yml
+
 - job: 'Windows_2022'
   pool:
     vmImage: 'windows-2022'
