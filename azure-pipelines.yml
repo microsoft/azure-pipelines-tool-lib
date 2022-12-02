@@ -1,7 +1,7 @@
 jobs:
-- job: 'Ubuntu_1804'
+- job: 'Ubuntu_2004'
   pool:
-    vmImage: 'Ubuntu-18.04'
+    vmImage: 'ubuntu-20.04'
 
   steps:
   - template: azure-pipelines-steps.yml
