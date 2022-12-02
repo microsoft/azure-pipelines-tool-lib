@@ -1,9 +1,4 @@
 jobs:
-- job: 'Ubuntu_2004'
-  pool:
-    vmImage: 'ubuntu-20.04'
-  steps:
-  - template: azure-pipelines-steps.yml
 
 - job: 'Ubuntu_2204'
   pool:
@@ -11,21 +6,9 @@ jobs:
   steps:
   - template: azure-pipelines-steps.yml
 
-- job: 'MacOS_11'
-  pool:
-    vmImage: 'macOS-11'
-  steps:
-  - template: azure-pipelines-steps.yml
-
 - job: 'MacOS_12'
   pool:
     vmImage: 'macOS-12'
-  steps:
-  - template: azure-pipelines-steps.yml
-
-- job: 'Windows_2019'
-  pool:
-    vmImage: 'windows-2019'
   steps:
   - template: azure-pipelines-steps.yml
 
