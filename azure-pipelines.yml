@@ -13,6 +13,14 @@ jobs:
   steps:
   - template: azure-pipelines-steps.yml
 
+- job: 'Windows_2019'
+  pool:
+    vmImage: 'windows-2019'
+
+  steps:
+  - template: azure-pipelines-steps.yml
+
+
 - job: 'Windows_2022'
   pool:
     vmImage: 'windows-2022'
