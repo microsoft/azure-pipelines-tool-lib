@@ -6,9 +6,9 @@ jobs:
   steps:
   - template: azure-pipelines-steps.yml
 
-- job: 'VS2017_Win2016'
+- job: 'Windows_2022'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2022'
 
   steps:
   - template: azure-pipelines-steps.yml
