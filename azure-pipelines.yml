@@ -40,3 +40,10 @@ jobs:
 
   steps:
   - template: azure-pipelines-steps.yml
+
+- job: 'MacOS_12'
+  pool:
+    vmImage: 'macOS-12'
+
+  steps:
+  - template: azure-pipelines-steps.yml
