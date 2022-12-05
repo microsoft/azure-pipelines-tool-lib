@@ -19,7 +19,4 @@
 ### 2.0.0-preview
 
 - <https://github.com/microsoft/azure-pipelines-tool-lib/pull/164>
-
-### 2.0.1
-
 - <https://github.com/microsoft/azure-pipelines-tool-lib/pull/166>
