@@ -31,7 +31,6 @@ describe('Tool Tests', function () {
     })
 
     it('downloads a 100 byte file', function () {
-        this.timeout(5000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -50,7 +49,6 @@ describe('Tool Tests', function () {
     });
 
     it('downloads a 100 byte file after a redirect', function () {
-        this.timeout(5000);
 
         return new Promise<void>(async (resolve, reject) => {
             try {

@@ -150,7 +150,7 @@ var runTests = function (testPath) {
         tl.mkdirP(tempDir);
     }
 
-    run('mocha ' + testPath + ' --recursive', true);
+    run('mocha ' + testPath + ' --recursive --timeout 10000', true);
 }
 
 target.units = function () {
