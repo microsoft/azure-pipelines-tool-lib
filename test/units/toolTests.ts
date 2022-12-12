@@ -38,12 +38,11 @@ describe('Tool Tests', function () {
 
     if (process.env['TF_BUILD']) {
         // this test verifies the expected version of node is being used to run the tests.
-        // 5.10.1 is what ships in the 1.x and 2.x agent.
         it('is expected version', (done: Mocha.Done) => {
             this.timeout(1000);
 
             console.log('node version: ' + process.version);
-            assert(process.version == 'v10.24.1', 'expected node v10.24.1. actual: ' + process.version);
+            assert(process.version == 'v16.15.1', 'expected node v16.15.1. actual: ' + process.version);
 
             done();
         });
