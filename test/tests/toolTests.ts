@@ -54,8 +54,7 @@ describe('Tool Tests', function () {
 
         return new Promise<void>(async (resolve, reject) => {
             try {
-                
-                let downPath: string = await toolLib.downloadTool("https://httpbingo.org/redirect-to?url=" + encodeURI('https://httpbin.org/bytes/100') + "&status_code=302");
+                let downPath: string = await toolLib.downloadTool("https://httpbingo.org/redirect-to?url=" + encodeURI('https://httpbingo.org/bytes/100') + "&status_code=302");
                 toolLib.debug('downloaded path: ' + downPath);
 
                 assert(tl.exist(downPath), 'downloaded file exists');

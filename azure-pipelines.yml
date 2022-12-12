@@ -1,15 +1,20 @@
 jobs:
-- job: 'Ubuntu_1804'
-  pool:
-    vmImage: 'Ubuntu-18.04'
 
+- job: 'Ubuntu_2204'
+  pool:
+    vmImage: 'ubuntu-22.04'
   steps:
   - template: azure-pipelines-steps.yml
 
-- job: 'VS2017_Win2016'
+- job: 'MacOS_12'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'macOS-12'
+  steps:
+  - template: azure-pipelines-steps.yml
 
+- job: 'Windows_2022'
+  pool:
+    vmImage: 'windows-2022'
   steps:
   - template: azure-pipelines-steps.yml
 
@@ -33,10 +38,3 @@ jobs:
       artifactName: npm
     displayName: 'Publish npm artifact'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-- job: 'MacOS_1014'
-  pool:
-    vmImage: 'macOS-10.14'
-
-  steps:
-  - template: azure-pipelines-steps.yml
