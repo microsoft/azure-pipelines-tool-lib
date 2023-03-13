@@ -249,46 +249,49 @@ export async function downloadTool(
             }
 
             tl.debug('creating stream');
-            let file: NodeJS.WritableStream = fs.createWriteStream(destPath);
-            file.on('open', async (fd) => {
-                try {
-                    let stream = response.message.pipe(file);
-                    stream.on('close', () => {
-                        tl.debug('download complete');
-                        let fileSizeInBytes: number;
-                        try {
-                            fileSizeInBytes = _getFileSizeOnDisk(destPath);
-                        }
-                        catch (err) {
-                            fileSizeInBytes = NaN;
-                            tl.warning(`Unable to check file size of ${destPath} due to error: ${err.Message}`);
-                        }
+            const file: NodeJS.WritableStream = fs.createWriteStream(destPath);
+            file
+                .on('open', async (fd) => {
+                    try {
+                        response.message
+                            .on('error', (err) => {
+                                file.end();
+                                reject(err);
+                            })
+                            .pipe(file);
+                    } catch (err) {
+                        reject(err);
+                    }
+                })
+                .on('close', () => {
+                    tl.debug('download complete');
+                    let fileSizeInBytes: number;
+                    try {
+                        fileSizeInBytes = _getFileSizeOnDisk(destPath);
+                    } catch (err) {
+                        fileSizeInBytes = NaN;
+                        tl.warning(`Unable to check file size of ${destPath} due to error: ${err.Message}`);
+                    }
 
-                        if (!isNaN(fileSizeInBytes)) {
-                            tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
-                        } else {
-                            tl.debug(`File size on disk was not found`);
-                        }
+                    if (!isNaN(fileSizeInBytes)) {
+                        tl.debug(`Downloaded file size: ${fileSizeInBytes} bytes`);
+                    } else {
+                        tl.debug(`File size on disk was not found`);
+                    }
 
-                        if (!isNaN(downloadedContentLength) &&
-                            !isNaN(fileSizeInBytes) &&
-                            fileSizeInBytes !== downloadedContentLength) {
-                            tl.warning(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
-                        }
+                    if (!isNaN(downloadedContentLength) &&
+                        !isNaN(fileSizeInBytes) &&
+                        fileSizeInBytes !== downloadedContentLength) {
+                        tl.warning(`Content-Length (${downloadedContentLength} bytes) did not match downloaded file size (${fileSizeInBytes} bytes).`);
+                    }
 
-                        resolve(destPath);
-                    });
-                }
-                catch (err) {
+                    resolve(destPath);
+                })
+                .on('error', (err) => {
+                    file.end();
                     reject(err);
-                }
-            });
-            file.on('error', (err) => {
-                file.end();
-                reject(err);
-            });
-        }
-        catch (error) {
+                });
+        } catch (error) {
             reject(error);
         }
     });

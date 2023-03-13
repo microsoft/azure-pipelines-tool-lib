@@ -24,3 +24,7 @@
 ### 2.0.0
 
 - Bump `azure-pipelines-task-lib` to `4.1.0`
+
+### 2.0.1
+
+- <https://github.com/microsoft/azure-pipelines-tool-lib/pull/184>
