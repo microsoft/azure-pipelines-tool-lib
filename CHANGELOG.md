@@ -28,3 +28,7 @@
 ### 2.0.1
 
 - <https://github.com/microsoft/azure-pipelines-tool-lib/pull/184>
+
+### 2.0.3
+
+- <https://github.com/microsoft/azure-pipelines-tool-lib/pull/189>
