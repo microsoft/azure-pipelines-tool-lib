@@ -42,7 +42,7 @@ describe('Tool Tests', function () {
             this.timeout(1000);
 
             console.log('node version: ' + process.version);
-            assert(process.version == 'v16.15.1', 'expected node v16.15.1. actual: ' + process.version);
+            assert(process.version == 'v20.3.1', 'expected node v20.3.1. actual: ' + process.version);
 
             done();
         });
