@@ -224,7 +224,7 @@ export async function downloadTool(
             // make sure that the folder exists
             tl.mkdirP(path.dirname(destPath));
 
-            console.log(tl.loc('TOOL_LIB_Downloading', url));
+            console.log(tl.loc('TOOL_LIB_Downloading', url.replace(/sig=[^&]*/, "sig=-REDACTED-")));
             tl.debug('destination ' + destPath);
 
             if (fs.existsSync(destPath)) {
