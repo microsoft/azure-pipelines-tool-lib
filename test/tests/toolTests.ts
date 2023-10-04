@@ -203,4 +203,46 @@ describe('Tool Tests', function () {
             }
         });
     });
+
+    it('Download with retries', async function () {
+        this.timeout(2000);
+
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                let downPath: string = await toolLib.downloadToolWithRetries("https://httpbingo.org/bytes/100");
+                toolLib.debug('downloaded path: ' + downPath);
+
+                assert(tl.exist(downPath), 'downloaded file exists');
+
+                await toolLib.cacheFile(downPath, 'foo', 'foo', '1.1.0');
+
+                let toolPath: string = toolLib.findLocalTool('foo', '1.1.0');
+                assert(tl.exist(toolPath), 'found tool exists');
+                assert(tl.exist(`${toolPath}.complete`), 'tool.complete exists');
+
+                let binaryPath: string = path.join(toolPath, 'foo');
+                assert(tl.exist(binaryPath), 'binary should exist');
+                resolve();
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    });
+
+    it('Should throw error when download fails with retries', async function () {
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                let errorCodeUrl: string = "https://httpbingo.org/status/400";
+                let downPath: string = await toolLib.downloadToolWithRetries(errorCodeUrl);
+
+                reject('a file was downloaded but it shouldnt have been');
+            } 
+            catch (err){
+                assert.equal(err['httpStatusCode'], 400, 'status code exists');
+
+                resolve();
+            }
+        });
+    });
 });
