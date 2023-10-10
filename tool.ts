@@ -302,6 +302,35 @@ export async function downloadTool(
     });
 }
 
+export async function downloadToolWithRetries(
+        url: string,
+        fileName?: string,
+        handlers?: ifm.IRequestHandler[],
+        additionalHeaders?: ifm.IHeaders,
+        maxAttempts: number = 3,
+        retryInterval: number = 500
+    ): Promise<string>  {
+    let attempt: number = 1;
+    let destinationPath: string = ''
+    
+    while (attempt <= maxAttempts && destinationPath == '') {
+        try {
+            destinationPath = await downloadTool(url, fileName, handlers, additionalHeaders);
+        } catch (err) {
+            if (attempt === maxAttempts) throw err;
+            const attemptInterval = attempt * retryInterval;
+
+            // Error will be shown in downloadTool.
+            tl.debug(`Attempt ${attempt} failed. Retrying after ${attemptInterval} ms`);
+            
+            await delay(attemptInterval);
+            attempt++;
+        }
+    }
+
+    return destinationPath;
+}
+
 //---------------------
 // Size functions
 //---------------------
