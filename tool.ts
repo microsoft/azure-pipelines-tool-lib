@@ -467,12 +467,12 @@ export async function cacheFile(sourceFile: string,
  * @param dest     destination directory. Optional.
  * @param _7zPath  path to 7zr.exe. Optional, for long path support. Most .7z archives do not have this
  * problem. If your .7z archive contains very long paths, you can pass the path to 7zr.exe which will
- * gracefully handle long paths. By default 7zdec.exe is used because it is a very small program and is
- * bundled with the tool lib. However it does not support long paths. 7zr.exe is the reduced command line
+ * gracefully handle long paths. By default 7z.exe is used because it is a very small program and is
+ * bundled with the tool lib. However it does not support long paths. 7z.exe is the reduced command line
  * interface, it is smaller than the full command line interface, and it does support long paths. At the
  * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
- * Be sure to check the current license agreement. If 7zr.exe is bundled with your task, then the path
- * to 7zr.exe can be pass to this function.
+ * Be sure to check the current license agreement. If 7z.exe is bundled with your task, then the path
+ * to 7z.exe can be pass to this function.
  * @param overwriteDest Overwrite files in destination catalog. Optional.
  * @returns        path to the destination directory
  */
