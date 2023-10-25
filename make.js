@@ -7,19 +7,14 @@ var xml2js = require('xml2js');
 
 // util functions
 var util = require('./make-util');
-var cd = util.cd;
 var cp = util.cp;
 var mkdir = util.mkdir;
 var rm = util.rm;
 var test = util.test;
 var run = util.run;
-var banner = util.banner;
 var rp = util.rp;
 var fail = util.fail;
-var ensureExists = util.ensureExists;
-var pathExists = util.pathExists;
 var addPath = util.addPath;
-var ensureTool = util.ensureTool;
 
 // add node modules .bin to the path so we can dictate version of tsc etc...
 var binPath = path.join(__dirname, 'node_modules', '.bin');

@@ -220,7 +220,7 @@ describe('Tool Tests', function () {
                         mock7zrPath,
                         [
                             'echo %* > "%~dp0mock7zr-args.txt"',
-                            `"${path.join(__dirname, '../..', 'externals', '7zdec.exe')}" x %5`
+                            `"${path.join(__dirname, '../..', 'externals', '7zip', '7z.exe')}" x %5`
                         ].join('\r\n'));
 
                     // copy the 7z file to the test dir

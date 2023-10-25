@@ -39,14 +39,14 @@ Set-Location -LiteralPath $Target
 
 # Print the ##command.
 $overrideDest = $(If ($OverrideDestDirectory) { "-aoa" } Else { "" })
-$_7zdec = Join-Path -Path "$PSScriptRoot" -ChildPath "externals/7zdec.exe"
+$_7zdec = Join-Path -Path "$PSScriptRoot" -ChildPath "externals/7zip/7z.exe"
 [System.Console]::WriteLine("##[command]$_7zdec $overrideDest x `"$Source`"")
 
 # The $OutputEncoding variable instructs PowerShell how to interpret the output
 # from the external command.
 $OutputEncoding = [System.Text.Encoding]::Default
 
-# Note, the output from 7zdec.exe needs to be iterated over. Otherwise PowerShell.exe
+# Note, the output from 7z.exe needs to be iterated over. Otherwise PowerShell.exe
 # will launch the external command in such a way that it inherits the streams.
 & $_7zdec x $Source 2>&1 |
     ForEach-Object {
@@ -57,7 +57,7 @@ $OutputEncoding = [System.Text.Encoding]::Default
             [System.Console]::WriteLine($_)
         }
     }
-[System.Console]::WriteLine("##[debug]7zdec.exe exit code '$LASTEXITCODE'")
+[System.Console]::WriteLine("##[debug]7z.exe exit code '$LASTEXITCODE'")
 [System.Console]::Out.Flush()
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
