@@ -36,22 +36,12 @@ The cache will be keyed by name, version, and optionally platform (x86, x64).
         {semantic version}
             {platform}
                 bin
-                   {tool files}
+                    {tool files}
 ```
 
 The downloader should guard against incomplete downloads. Therefore, the tool downloader adds a 0-byte file named `{platform}.complete` as a sibling of `{platform}` when it has completed the download. `azure-pipelines-tool-lib` will check for this file before retrieving the tool.
 
 As a complete, concrete example, here is how a completed download of Python 3.6.4 for x64 would look in the tool cache:
-
-```
-$AGENT_TOOLSDIRECTORY/
-    Python/
-        3.6.4/
-            x64/
-                bin/
-                    {tool files}
-            x64.complete
-```
 
 ```
 $AGENT_TOOLSDIRECTORY/
