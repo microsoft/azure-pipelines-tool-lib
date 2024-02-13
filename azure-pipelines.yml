@@ -12,7 +12,8 @@ extends:
   parameters:
     sdl:
       sourceAnalysisPool:
-        name: 1ES-Shared-Hosted-Pool_Windows-Server-2022
+        name: 1ES-ABTT-Shared-Pool
+        image: abtt-windows-2022
         os: windows
     customBuildTags:
     - ES365AIMigrationTooling
@@ -21,7 +22,8 @@ extends:
       jobs:
       - job: 'Ubuntu_2204'
         pool:
-          name: AnyBuild_Hosted_1ESPTUbuntu2204_WestUS3
+          name: 1ES-ABTT-Shared-Pool
+          image: abtt-ubuntu-2204
           os: linux
         steps:
         - template: /azure-pipelines-steps.yml@self
@@ -34,7 +36,8 @@ extends:
         - template: /azure-pipelines-steps.yml@self
       - job: 'Windows_2022'
         pool:
-          name: 1ES-Shared-Hosted-Pool_Windows-Server-2022
+          name: 1ES-ABTT-Shared-Pool
+          image: abtt-windows-2022
           os: windows
         templateContext:
           outputs:
