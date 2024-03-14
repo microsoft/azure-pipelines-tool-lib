@@ -7,8 +7,8 @@ import * as fs from 'fs';
 import * as semver from 'semver';
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as trm from 'azure-pipelines-task-lib/toolrunner';
-const cmp = require('semver-compare');
-const uuidV4 = require('uuid/v4');
+import cmp = require('semver-compare');
+import * as uuid from 'uuid';
 
 declare let rest;
 
@@ -210,7 +210,7 @@ export async function downloadTool(
             handlers = handlers || null;
             let http: httpm.HttpClient = new httpm.HttpClient(userAgent, handlers, requestOptions);
             tl.debug(fileName);
-            fileName = fileName || uuidV4();
+            fileName = fileName || uuid.v4();
 
             // check if it's an absolute path already
             var destPath: string;
@@ -303,16 +303,16 @@ export async function downloadTool(
 }
 
 export async function downloadToolWithRetries(
-        url: string,
-        fileName?: string,
-        handlers?: ifm.IRequestHandler[],
-        additionalHeaders?: ifm.IHeaders,
-        maxAttempts: number = 3,
-        retryInterval: number = 500
-    ): Promise<string>  {
+    url: string,
+    fileName?: string,
+    handlers?: ifm.IRequestHandler[],
+    additionalHeaders?: ifm.IHeaders,
+    maxAttempts: number = 3,
+    retryInterval: number = 500
+): Promise<string> {
     let attempt: number = 1;
     let destinationPath: string = ''
-    
+
     while (attempt <= maxAttempts && destinationPath == '') {
         try {
             destinationPath = await downloadTool(url, fileName, handlers, additionalHeaders);
@@ -322,7 +322,7 @@ export async function downloadToolWithRetries(
 
             // Error will be shown in downloadTool.
             tl.debug(`Attempt ${attempt} failed. Retrying after ${attemptInterval} ms`);
-            
+
             await delay(attemptInterval);
             attempt++;
         }
@@ -500,10 +500,10 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string, o
             }
 
             _7z.arg('x')         // eXtract files with full paths
-               .arg('-bb1')      // -bb[0-3] : set output log level
-               .arg('-bd')       // disable progress indicator
-               .arg('-sccUTF-8') // set charset for for console input/output
-               .arg(file);
+                .arg('-bb1')      // -bb[0-3] : set output log level
+                .arg('-bd')       // disable progress indicator
+                .arg('-sccUTF-8') // set charset for for console input/output
+                .arg(file);
             await _7z.exec();
         }
         else {
@@ -595,7 +595,7 @@ export async function extractZip(file: string, destination?: string): Promise<st
 function _createExtractFolder(dest?: string): string {
     if (!dest) {
         // create a temp dir
-        dest = path.join(_getAgentTemp(), uuidV4());
+        dest = path.join(_getAgentTemp(), uuid.v4());
     }
 
     tl.mkdirP(dest);
