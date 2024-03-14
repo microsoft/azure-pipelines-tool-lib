@@ -258,11 +258,6 @@ export async function downloadTool(
                                 file.end();
                                 reject(err);
                             })
-                            .on('aborted', () => {
-                                // this block is for Node10 compatibility since it doesn't emit 'error' event after 'aborted' one
-                                file.end();
-                                reject(new Error('Aborted'));
-                            })
                             .pipe(file);
                     } catch (err) {
                         reject(err);
@@ -303,16 +298,16 @@ export async function downloadTool(
 }
 
 export async function downloadToolWithRetries(
-        url: string,
-        fileName?: string,
-        handlers?: ifm.IRequestHandler[],
-        additionalHeaders?: ifm.IHeaders,
-        maxAttempts: number = 3,
-        retryInterval: number = 500
-    ): Promise<string>  {
+    url: string,
+    fileName?: string,
+    handlers?: ifm.IRequestHandler[],
+    additionalHeaders?: ifm.IHeaders,
+    maxAttempts: number = 3,
+    retryInterval: number = 500
+): Promise<string> {
     let attempt: number = 1;
     let destinationPath: string = ''
-    
+
     while (attempt <= maxAttempts && destinationPath == '') {
         try {
             destinationPath = await downloadTool(url, fileName, handlers, additionalHeaders);
@@ -322,7 +317,7 @@ export async function downloadToolWithRetries(
 
             // Error will be shown in downloadTool.
             tl.debug(`Attempt ${attempt} failed. Retrying after ${attemptInterval} ms`);
-            
+
             await delay(attemptInterval);
             attempt++;
         }
@@ -500,10 +495,10 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string, o
             }
 
             _7z.arg('x')         // eXtract files with full paths
-               .arg('-bb1')      // -bb[0-3] : set output log level
-               .arg('-bd')       // disable progress indicator
-               .arg('-sccUTF-8') // set charset for for console input/output
-               .arg(file);
+                .arg('-bb1')      // -bb[0-3] : set output log level
+                .arg('-bd')       // disable progress indicator
+                .arg('-sccUTF-8') // set charset for for console input/output
+                .arg(file);
             await _7z.exec();
         }
         else {
