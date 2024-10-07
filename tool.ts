@@ -205,7 +205,7 @@ export async function downloadTool(
     handlers?: ifm.IRequestHandler[],
     additionalHeaders?: ifm.IHeaders
 ): Promise<string> {
-    return new Promise<string>(async (resolve, reject) => {
+    return new Promise<string>(async (resolve, reject: (err: Error) => void) => {
         try {
             handlers = handlers || null;
             let http: httpm.HttpClient = new httpm.HttpClient(userAgent, handlers, requestOptions);
@@ -252,8 +252,16 @@ export async function downloadTool(
             const file: NodeJS.WritableStream = fs.createWriteStream(destPath);
             file
                 .on('open', async (fd) => {
+                    tl.debug('file write stream opened. fd: ' + fd);
+                    const messageSteam = response.message;
+                    if (messageSteam.aborted || messageSteam.destroyed) {
+                        file.end();
+                        reject(new Error('Incoming message read stream was Aborted or Destroyed before download was complete'));
+                        return;
+                    }
+                    tl.debug('subscribing to message read stream events...');
                     try {
-                        response.message
+                        messageSteam
                             .on('error', (err) => {
                                 file.end();
                                 reject(err);
@@ -303,16 +311,16 @@ export async function downloadTool(
 }
 
 export async function downloadToolWithRetries(
-        url: string,
-        fileName?: string,
-        handlers?: ifm.IRequestHandler[],
-        additionalHeaders?: ifm.IHeaders,
-        maxAttempts: number = 3,
-        retryInterval: number = 500
-    ): Promise<string>  {
+    url: string,
+    fileName?: string,
+    handlers?: ifm.IRequestHandler[],
+    additionalHeaders?: ifm.IHeaders,
+    maxAttempts: number = 3,
+    retryInterval: number = 500
+): Promise<string> {
     let attempt: number = 1;
     let destinationPath: string = ''
-    
+
     while (attempt <= maxAttempts && destinationPath == '') {
         try {
             destinationPath = await downloadTool(url, fileName, handlers, additionalHeaders);
@@ -322,7 +330,7 @@ export async function downloadToolWithRetries(
 
             // Error will be shown in downloadTool.
             tl.debug(`Attempt ${attempt} failed. Retrying after ${attemptInterval} ms`);
-            
+
             await delay(attemptInterval);
             attempt++;
         }
@@ -500,10 +508,10 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string, o
             }
 
             _7z.arg('x')         // eXtract files with full paths
-               .arg('-bb1')      // -bb[0-3] : set output log level
-               .arg('-bd')       // disable progress indicator
-               .arg('-sccUTF-8') // set charset for for console input/output
-               .arg(file);
+                .arg('-bb1')      // -bb[0-3] : set output log level
+                .arg('-bd')       // disable progress indicator
+                .arg('-sccUTF-8') // set charset for for console input/output
+                .arg(file);
             await _7z.exec();
         }
         else {
