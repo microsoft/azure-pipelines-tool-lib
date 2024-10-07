@@ -9,10 +9,10 @@ import * as tl from 'azure-pipelines-task-lib/task';
 import * as trm from 'azure-pipelines-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
+const pkg = require('./package.json');
 
 declare let rest;
 
-let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
