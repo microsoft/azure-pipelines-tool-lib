@@ -253,15 +253,15 @@ export async function downloadTool(
             file
                 .on('open', async (fd) => {
                     tl.debug('file write stream opened. fd: ' + fd);
-                    const messageSteam = response.message;
-                    if (messageSteam.aborted || messageSteam.destroyed) {
+                    const messageStream = response.message;
+                    if (messageStream.aborted || messageStream.destroyed) {
                         file.end();
                         reject(new Error('Incoming message read stream was Aborted or Destroyed before download was complete'));
                         return;
                     }
                     tl.debug('subscribing to message read stream events...');
                     try {
-                        messageSteam
+                        messageStream
                             .on('error', (err) => {
                                 file.end();
                                 reject(err);
