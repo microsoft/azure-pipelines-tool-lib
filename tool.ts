@@ -275,6 +275,7 @@ export async function downloadTool(
                     } catch (err) {
                         reject(err);
                     }
+                    tl.debug('successfully subscribed to message read stream events');
                 })
                 .on('close', () => {
                     tl.debug('download complete');
