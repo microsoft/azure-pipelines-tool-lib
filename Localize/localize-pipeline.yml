@@ -34,6 +34,7 @@ stages:
           Write-Host "##vso[task.setvariable variable=shouldCreatePR]$($false)"
         }
       displayName: "Determine the number of the week in the sprint and sprint number"
+
     - powershell: |
         git config --global user.email "$(github_email)"
         git config --global user.name "$(username)"
@@ -42,7 +43,8 @@ stages:
         git push origin Localization
       displayName: "Sync with master branch"
       condition: and(succeeded(), in(variables['build.reason'], 'Schedule', 'Manual'))
-    - task: OneLocBuild@2
+
+    - task: OneLocBuild@3
       condition: and(succeeded(), in(variables['build.reason'], 'Schedule', 'Manual'))
       inputs:
         locProj: 'Localize/LocProject.json'
