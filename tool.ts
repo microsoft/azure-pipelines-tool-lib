@@ -12,7 +12,7 @@ const uuidV4 = require('uuid/v4');
 
 declare let rest;
 
-let pkg = require(path.join(__dirname, 'package.json'));
+let pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json')).toString('utf-8'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
