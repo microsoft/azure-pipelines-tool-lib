@@ -13,6 +13,9 @@
     "type": "git",
     "url": "git+https://github.com/microsoft/azure-pipelines-tool-lib.git"
   },
+  "engines": {
+    "node": ">=16.15.1"
+  },
   "keywords": [
     "VSTS"
   ],
