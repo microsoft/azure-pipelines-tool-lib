@@ -45,7 +45,7 @@ always-auth=true
     
     // Publish to npm registry
     console.log(`Publishing to npm registry: ${registryUrl}`);
-    execSync(`npm publish --registry ${registryUrl}`, { stdio: 'inherit' });
+    execSync(`npm publish --registry ${registryUrl} --ignore-scripts`, { stdio: 'inherit' });
     console.log('Successfully published to npm!');
     
 } catch (error) {
