@@ -1,5 +1,5 @@
 {
-  "name": "@dassayantan/azure-pipelines-tool-lib-test",
+  "name": "@dassayantan/azure-pipelines-tool-lib-v4",
   "version": "2.0.9",
   "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
@@ -7,8 +7,7 @@
     "build": "node make.js build",
     "test": "node make.js test",
     "sample": "node make.js sample",
-    "units": "node make.js units",
-    "publish": "node publish.js"
+    "units": "node make.js units"
   },
   "repository": {
     "type": "git",

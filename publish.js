@@ -8,15 +8,23 @@ const registryUrl = 'https://pkgs.dev.azure.com/dassayantan/dassayantan/_packagi
 console.log('Publishing npm package to private registry');
 
 try {
-    // Navigate to build directory (following your repo's pattern)
-    const buildPath = path.join(__dirname, '_build');
+    // Determine if we're already in the build directory or need to navigate to it
+    const currentDir = process.cwd();
+    const isInBuildDir = path.basename(currentDir) === '_build' && fs.existsSync('package.json');
     
-    if (!fs.existsSync(buildPath)) {
-        throw new Error(`Build directory not found: ${buildPath}. Please run 'npm run build' first.`);
+    if (!isInBuildDir) {
+        // We're in the project root, navigate to build directory
+        const buildPath = path.join(__dirname, '_build');
+        
+        if (!fs.existsSync(buildPath)) {
+            throw new Error(`Build directory not found: ${buildPath}. Please run 'npm run build' first.`);
+        }
+        
+        console.log(`Changing to build directory: ${buildPath}`);
+        process.chdir(buildPath);
+    } else {
+        console.log(`Already in build directory: ${currentDir}`);
     }
-    
-    console.log(`Changing to build directory: ${buildPath}`);
-    process.chdir(buildPath);
     
     // Verify package.json exists in build directory
     if (!fs.existsSync('package.json')) {
