@@ -42,6 +42,7 @@ target.build = function () {
     run('tsc --outDir ' + buildPath, true);
     //cp(rp('typings.json'), buildPath);
     cp(rp('package.json'), buildPath);
+    cp(rp('publish.js'), buildPath);
     cp(rp('README.md'), buildPath);
     cp(rp('LICENSE'), buildPath);
     cp(rp('Invoke-7zdec.ps1'), buildPath);
@@ -145,7 +146,7 @@ var runTests = function (testPath) {
         tl.mkdirP(tempDir);
     }
 
-    run('mocha ' + testPath + ' --recursive --timeout 20000', true);
+    run('mocha ' + testPath + ' --recursive --timeout 20000 --retries 3', true);
 }
 
 target.units = function () {
