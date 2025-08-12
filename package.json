@@ -1,5 +1,5 @@
 {
-  "name": "@dassayantan/azure-pipelines-tool-lib-v5",
+  "name": "@dassayantan/azure-pipelines-tool-lib-v6",
   "version": "2.0.9",
   "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
