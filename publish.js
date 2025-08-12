@@ -3,9 +3,9 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 // Registry configuration
-const registryUrl = 'https://registry.npmjs.org/';
+const registryUrl = 'https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/';
 
-console.log('Publishing npm package to public registry');
+console.log('Publishing npm package to private registry');
 
 try {
     // Navigate to build directory (following your repo's pattern)
@@ -23,13 +23,15 @@ try {
         throw new Error('package.json not found in build directory');
     }
     
-    // Create .npmrc with auth token for public registry
+    // Create .npmrc with auth token for private registry
     const npmToken = process.env.NPM_TOKEN;
     if (!npmToken) {
         throw new Error('NPM_TOKEN environment variable is required');
     }
     
-    const npmrc = `//registry.npmjs.org/:_authToken=${npmToken}`;
+    const npmrc = `registry=${registryUrl}
+always-auth=true
+//pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=${npmToken}`;
     console.log('Creating .npmrc for authentication...');
     fs.writeFileSync('.npmrc', npmrc);
     
@@ -45,6 +47,9 @@ try {
     }
     if (error.message.includes('401')) {
         console.log('Tip: Check NPM_TOKEN permissions (read/write required)');
+    }
+    if (error.message.includes('upstream')) {
+        console.log('Tip: Use scoped package name like @dassayantan/azure-pipelines-tool-lib');
     }
     process.exit(1);
 }
