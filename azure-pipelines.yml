@@ -1,6 +1,9 @@
 # This Yaml Document has been converted by ESAI Yaml Pipeline Conversion Tool.
 # This pipeline will be extended to the OneESPT template
 
+variables:
+- group: npm-tokens
+
 resources:
   repositories:
   - repository: 1ESPipelineTemplates
@@ -57,3 +60,4 @@ extends:
             artifactName: npm
         steps:
         - template: /azure-pipelines-steps.yml@self
+        - template: /release-pipeline.yml@self

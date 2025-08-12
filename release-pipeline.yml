@@ -1,0 +1,8 @@
+steps:
+- bash: |
+    npm run publish
+  condition: and(succeeded(), in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual'), eq(variables['Agent.OS'], 'Windows_NT'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  env:
+    NPM_TOKEN: $(NPM_TOKEN)
+  displayName: 'Publish packages (Only Windows)'
+  enabled: true
