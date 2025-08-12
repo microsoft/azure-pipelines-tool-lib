@@ -2,7 +2,7 @@
 # This pipeline will be extended to the OneESPT template
 
 variables:
-- group: npm-tokens
+- group: tool-lib-npm-token
 
 resources:
   repositories:
