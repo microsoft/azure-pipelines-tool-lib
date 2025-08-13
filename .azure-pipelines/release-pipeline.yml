@@ -1,0 +1,156 @@
+# Release pipeline for azure-pipelines-tool-lib
+# This pipeline publishes to npm with a two-stage process:
+# Stage 1: Publish as prerelease (automated)
+# Stage 2: Promote to latest (manual approval required)
+
+trigger: none  # Manual trigger only
+
+variables:
+- group: npm-tokens
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    featureFlags:
+      autoBaseline: false
+    sdl:
+      baseline:
+        baselineSet: default
+        baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
+      sourceAnalysisPool:
+        name: 1ES-ABTT-Shared-Pool
+        image: abtt-windows-2022
+        os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling-Release
+    
+    stages:
+    # ================================
+    # STAGE 1: BUILD & PRERELEASE PUBLISHING (AUTOMATED)
+    # ================================
+    - stage: Build
+      displayName: Build and Prerelease
+      jobs:
+      - job: build
+        displayName: Build and Publish Prerelease
+        pool:
+          name: 1ES-ABTT-Shared-Pool
+          image: abtt-windows-2022
+          os: windows
+        templateContext:
+          outputs:
+          - output: pipelineArtifact
+            displayName: 'Publish azure-pipelines-tool-lib package to pipeline artifacts'
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifactType: 'pipeline'
+            artifactName: 'azure-pipelines-tool-lib-package'
+        steps:
+        - template: /.azure-pipelines/common-steps.yml@self
+        
+        # Conditional publishing - only from master branch
+        - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
+          - task: NpmAuthenticate@0
+            displayName: 'Setup npm authentication'
+            inputs:
+              workingFile: .npmrc
+            condition: eq(variables['Build.SourceBranchName'], 'master')
+
+          - script: npm publish --ignore-scripts --tag prerelease
+            displayName: 'Publish to npm as prerelease'
+            condition: eq(variables['Build.SourceBranchName'], 'master')
+            continueOnError: true
+
+          - pwsh: |
+              if ($LASTEXITCODE -ne 0) {
+                  Write-Host "##vso[task.logissue type=warning]Publishing azure-pipelines-tool-lib was unsuccessful"
+                  Write-Host "##vso[task.complete result=SucceededWithIssues;]"
+              } else {
+                  Write-Host "Successfully published as prerelease"
+              }
+            displayName: 'Check publish status'
+            condition: eq(variables['Build.SourceBranchName'], 'master')
+
+          - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
+            displayName: 'Cleanup npm authentication'
+            condition: always()
+
+    # ================================
+    # STAGE 2: RELEASE TO LATEST (MANUAL APPROVAL REQUIRED)
+    # ================================
+    - stage: Release
+      displayName: Release to Latest
+      dependsOn: Build
+      condition: succeeded()
+      jobs:
+        - deployment: ReleaseToLatest
+          displayName: Promote to Latest Tag
+          pool:
+            name: 1ES-ABTT-Shared-Pool
+            image: abtt-windows-2022
+            os: windows
+          environment: 'npm-production'  # Requires manual approval
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                  - checkout: self
+                    clean: true
+                
+                  - task: NodeTool@0
+                    displayName: Use Node 16
+                    inputs:
+                      versionSpec: "16.x"
+                  
+                  - task: NpmAuthenticate@0
+                    displayName: 'Setup npm authentication'
+                    inputs:
+                      workingFile: .npmrc
+                  
+                  - pwsh: |
+                      # Get package name and version from package.json
+                      $packageInfo = Get-Content "package.json" | ConvertFrom-Json
+                      $packageName = $packageInfo.name
+                      $packageVersion = $packageInfo.version
+                      Write-Host "Package: $packageName@$packageVersion"
+                      
+                      # Store for next steps
+                      Write-Host "##vso[task.setvariable variable=packageName]$packageName"
+                      Write-Host "##vso[task.setvariable variable=packageVersion]$packageVersion"
+                      Write-Host "##vso[task.setvariable variable=packageIdentifier]$packageName@$packageVersion"
+                    displayName: 'Get package information'
+                  
+                  - script: npm dist-tag add "$(packageIdentifier)" latest
+                    displayName: 'Promote package to latest'
+                    continueOnError: true
+                  
+                  - pwsh: |
+                      if ($LASTEXITCODE -ne 0) {
+                          Write-Host "##vso[task.logissue type=error]Failed to promote package to latest"
+                          exit 1
+                      } else {
+                          Write-Host "Successfully promoted $(packageIdentifier) to latest"
+                      }
+                    displayName: 'Check promotion status'
+                  
+                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease
+                    displayName: 'Remove prerelease tag'
+                    continueOnError: true
+                  
+                  - pwsh: |
+                      if ($LASTEXITCODE -ne 0) {
+                          Write-Host "##vso[task.logissue type=warning]Failed to remove prerelease tag, but package is now latest"
+                      } else {
+                          Write-Host "Successfully removed prerelease tag from $(packageIdentifier)"
+                      }
+                    displayName: 'Check prerelease removal status'
+                  
+                  - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
+                    displayName: 'Cleanup npm authentication'
+                    condition: always()
