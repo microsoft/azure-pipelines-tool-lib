@@ -6,7 +6,7 @@
 trigger: none  # Manual trigger only
 
 variables:
-- group: npm-tokens
+- group: tool-lib-npm-tokens
 
 resources:
   repositories:
@@ -108,7 +108,7 @@ extends:
                   - task: NodeTool@0
                     displayName: Use Node 16
                     inputs:
-                      versionSpec: "16.x"
+                      versionSpec: "16.15.1"
                   
                   - task: NpmAuthenticate@0
                     displayName: 'Setup npm authentication'
