@@ -53,6 +53,8 @@ extends:
             artifactName: 'azure-pipelines-tool-lib-package'
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
+          parameters:
+            includePackaging: $(includePackaging)
         
         # Conditional publishing - only from master branch
         - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
