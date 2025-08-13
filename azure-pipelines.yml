@@ -31,14 +31,14 @@ extends:
           image: abtt-ubuntu-2204
           os: linux
         steps:
-        - template: /azure-pipelines-steps.yml@self
+        - template: /.azure-pipelines/common-steps.yml@self
       - job: 'MacOS_12'
         pool:
           name: Azure Pipelines
           image: macOS-latest
           os: macOS
         steps:
-        - template: /azure-pipelines-steps.yml@self
+        - template: /.azure-pipelines/common-steps.yml@self
       - job: 'Windows_2022'
         pool:
           name: 1ES-ABTT-Shared-Pool
@@ -56,4 +56,4 @@ extends:
             targetPath: '$(Build.ArtifactStagingDirectory)'
             artifactName: npm
         steps:
-        - template: /azure-pipelines-steps.yml@self
+        - template: /.azure-pipelines/common-steps.yml@self
