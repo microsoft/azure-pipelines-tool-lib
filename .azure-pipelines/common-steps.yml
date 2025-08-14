@@ -2,6 +2,7 @@
 # Shared build steps used across CI and release pipelines
 parameters:
 - name: includePackaging
+  default: 'false'
 
 steps:
   - checkout: self

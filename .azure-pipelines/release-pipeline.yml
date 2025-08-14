@@ -6,7 +6,7 @@
 trigger: none  # Manual trigger only
 
 variables:
-- group: npm-tokens
+- group: tool-lib-npm-tokens
 
 resources:
   repositories:
@@ -57,13 +57,13 @@ extends:
             includePackaging: $(includePackaging)
         
         # Conditional publishing - only from master branch
-        - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
+        - ${{ if eq(variables['build.reason'], 'Manual') }}:
           - script: |
-              echo '//registry.npmjs.org/:_authToken=$(npm-automation.token)' > .npmrc
+              echo '//dev.azure.com/dassayantan/dassayantan/_artifacts/feed/TestPackages:_authToken=$(npm-automation.token)' > .npmrc
               npm publish --ignore-scripts --tag prerelease
               rm .npmrc
             displayName: 'Publish to npm as prerelease'
-            condition: eq(variables['Build.SourceBranchName'], 'master')
+            # condition: eq(variables['Build.SourceBranchName'], 'master')
             continueOnError: true
 
           - pwsh: |
@@ -74,7 +74,7 @@ extends:
                   Write-Host "Successfully published as prerelease"
               }
             displayName: 'Check publish status'
-            condition: eq(variables['Build.SourceBranchName'], 'master')
+            # condition: eq(variables['Build.SourceBranchName'], 'master')
 
     # ================================
     # STAGE 2: RELEASE TO LATEST (MANUAL APPROVAL REQUIRED)
@@ -103,7 +103,7 @@ extends:
                     inputs:
                       versionSpec: "16.15.1"
                   
-                  - script: echo '//registry.npmjs.org/:_authToken=$(npm-automation.token)' > .npmrc
+                  - script: echo '//dev.azure.com/dassayantan/dassayantan/_artifacts/feed/TestPackages:_authToken=$(npm-automation.token)' > .npmrc
                     displayName: 'Setup npm authentication'
                   
                   - pwsh: |
