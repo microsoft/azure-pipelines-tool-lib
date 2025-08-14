@@ -59,10 +59,11 @@ extends:
         # Conditional publishing - only from master branch
         - ${{ if eq(variables['build.reason'], 'Manual') }}:
           - script: |
-              echo '//dev.azure.com/dassayantan/dassayantan/_artifacts/feed/TestPackages:_authToken=$(npm-automation.token)' > .npmrc
+              echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
+              echo 'always-auth=true' >> .npmrc
               npm publish --ignore-scripts --tag prerelease
               rm .npmrc
-            displayName: 'Publish to npm as prerelease'
+            displayName: 'Publish to Azure Artifacts as prerelease'
             # condition: eq(variables['Build.SourceBranchName'], 'master')
             continueOnError: true
 
@@ -103,8 +104,10 @@ extends:
                     inputs:
                       versionSpec: "16.15.1"
                   
-                  - script: echo '//dev.azure.com/dassayantan/dassayantan/_artifacts/feed/TestPackages:_authToken=$(npm-automation.token)' > .npmrc
-                    displayName: 'Setup npm authentication'
+                  - script: |
+                      echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
+                      echo 'always-auth=true' >> .npmrc
+                    displayName: 'Setup Azure Artifacts authentication'
                   
                   - pwsh: |
                       # Get package name and version from package.json
