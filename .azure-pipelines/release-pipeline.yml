@@ -6,7 +6,7 @@
 trigger: none  # Manual trigger only
 
 variables:
-- group: tool-lib-npm-tokens
+- group: npm-tokens
 
 resources:
   repositories:
@@ -58,13 +58,10 @@ extends:
         
         # Conditional publishing - only from master branch
         - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
-          - task: NpmAuthenticate@0
-            displayName: 'Setup npm authentication'
-            inputs:
-              workingFile: .npmrc
-            condition: eq(variables['Build.SourceBranchName'], 'master')
-
-          - script: npm publish --ignore-scripts --tag prerelease
+          - script: |
+              echo '//registry.npmjs.org/:_authToken=$(npm-automation.token)' > .npmrc
+              npm publish --ignore-scripts --tag prerelease
+              rm .npmrc
             displayName: 'Publish to npm as prerelease'
             condition: eq(variables['Build.SourceBranchName'], 'master')
             continueOnError: true
@@ -78,10 +75,6 @@ extends:
               }
             displayName: 'Check publish status'
             condition: eq(variables['Build.SourceBranchName'], 'master')
-
-          - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
-            displayName: 'Cleanup npm authentication'
-            condition: always()
 
     # ================================
     # STAGE 2: RELEASE TO LATEST (MANUAL APPROVAL REQUIRED)
@@ -110,10 +103,8 @@ extends:
                     inputs:
                       versionSpec: "16.15.1"
                   
-                  - task: NpmAuthenticate@0
+                  - script: echo '//registry.npmjs.org/:_authToken=$(npm-automation.token)' > .npmrc
                     displayName: 'Setup npm authentication'
-                    inputs:
-                      workingFile: .npmrc
                   
                   - pwsh: |
                       # Get package name and version from package.json
@@ -153,6 +144,6 @@ extends:
                       }
                     displayName: 'Check prerelease removal status'
                   
-                  - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
+                  - script: rm .npmrc
                     displayName: 'Cleanup npm authentication'
                     condition: always()
