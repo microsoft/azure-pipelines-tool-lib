@@ -54,7 +54,7 @@ extends:
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
-            includePackaging: $(includePackaging)
+            includePackaging: 'true'
         
         # Conditional publishing - only from master branch
         - ${{ if eq(variables['build.reason'], 'Manual') }}:

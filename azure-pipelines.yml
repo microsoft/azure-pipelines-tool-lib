@@ -32,6 +32,8 @@ extends:
           os: linux
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
+          parameters:
+            includePackaging: 'false'
       - job: 'MacOS_12'
         pool:
           name: Azure Pipelines
@@ -39,6 +41,8 @@ extends:
           os: macOS
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
+          parameters:
+            includePackaging: 'false'
       - job: 'Windows_2022'
         pool:
           name: 1ES-ABTT-Shared-Pool
@@ -57,3 +61,5 @@ extends:
             artifactName: npm
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
+          parameters:
+            includePackaging: 'false'
