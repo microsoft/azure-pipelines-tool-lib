@@ -69,9 +69,20 @@ extends:
           - script: |
               echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
               echo 'always-auth=true' >> .npmrc
-              npm publish --ignore-scripts --tag prerelease --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/
-              rm .npmrc
+            displayName: 'Create .npmrc with registry'
+
+          - task: NpmAuthenticate@0
+            displayName: 'Authenticate with Azure Artifacts'
+            inputs:
+              workingFile: .npmrc
+
+          - script: npm publish --ignore-scripts --tag prerelease
             displayName: 'Publish to Azure Artifacts as prerelease'
+            continueOnError: true
+
+          - script: rm .npmrc
+            displayName: 'Cleanup npm authentication'
+            condition: always()
             # condition: eq(variables['Build.SourceBranchName'], 'master')
             continueOnError: true
 
@@ -118,7 +129,12 @@ extends:
                   - script: |
                       echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
                       echo 'always-auth=true' >> .npmrc
-                    displayName: 'Setup Azure Artifacts authentication'
+                    displayName: 'Create .npmrc with registry'
+
+                  - task: NpmAuthenticate@0
+                    displayName: 'Authenticate with Azure Artifacts'
+                    inputs:
+                      workingFile: .npmrc
                   
                   - pwsh: |
                       # Get package name and version from package.json
@@ -133,7 +149,7 @@ extends:
                       Write-Host "##vso[task.setvariable variable=packageIdentifier]$packageName@$packageVersion"
                     displayName: 'Get package information'
                   
-                  - script: npm dist-tag add "$(packageIdentifier)" latest --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/
+                  - script: npm dist-tag add "$(packageIdentifier)" latest
                     displayName: 'Promote package to latest'
                     continueOnError: true
                   
@@ -146,7 +162,7 @@ extends:
                       }
                     displayName: 'Check promotion status'
                   
-                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/
+                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease
                     displayName: 'Remove prerelease tag'
                     continueOnError: true
                   
