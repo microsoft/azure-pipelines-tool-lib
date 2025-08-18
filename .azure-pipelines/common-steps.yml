@@ -1,0 +1,35 @@
+# Common steps template
+# Shared build steps used across CI and release pipelines
+parameters:
+- name: includePackaging
+  type: boolean
+  default: false
+
+steps:
+  - checkout: self
+    clean: true
+
+  - task: NodeTool@0
+    displayName: Use Node 16
+    inputs:
+      versionSpec: "16.15.1"
+
+  - task: NpmAuthenticate@0
+    inputs:
+      workingFile: .npmrc
+
+  - script: npm install
+    displayName: 'npm install'
+
+  - script: npm run build
+    displayName: 'npm run build'
+
+  - script: npm test
+    displayName: 'npm test'
+
+  # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
+  - script: |
+      npm pack
+      cp *.tgz '$(Build.ArtifactStagingDirectory)'
+    displayName: Run npm-pack and copy to ArtifactStagingDirectory
+    condition: eq('${{ parameters.includePackaging }}', true)

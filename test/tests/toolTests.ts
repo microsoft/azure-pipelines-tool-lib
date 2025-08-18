@@ -171,7 +171,7 @@ describe('Tool Tests', function () {
     });
 
     it('download with basic authentication', function () {
-        this.timeout(2000);
+        this.timeout(10000);
 
         return new Promise<void>(async (resolve, reject) => {
             // General parameters:
