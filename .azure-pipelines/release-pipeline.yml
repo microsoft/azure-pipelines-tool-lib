@@ -69,12 +69,8 @@ extends:
           - script: |
               echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
               echo 'always-auth=true' >> .npmrc
+              echo '//pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=$(npm-automation.token)' >> .npmrc
             displayName: 'Create .npmrc with registry'
-
-          - task: NpmAuthenticate@0
-            displayName: 'Authenticate with Azure Artifacts'
-            inputs:
-              workingFile: .npmrc
 
           - script: npm publish --ignore-scripts --tag prerelease
             displayName: 'Publish to Azure Artifacts as prerelease'
@@ -129,12 +125,8 @@ extends:
                   - script: |
                       echo 'registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/' > .npmrc
                       echo 'always-auth=true' >> .npmrc
+                      echo '//pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=$(npm-automation.token)' >> .npmrc
                     displayName: 'Create .npmrc with registry'
-
-                  - task: NpmAuthenticate@0
-                    displayName: 'Authenticate with Azure Artifacts'
-                    inputs:
-                      workingFile: .npmrc
                   
                   - pwsh: |
                       # Get package name and version from package.json
