@@ -84,7 +84,7 @@ extends:
               type .npmrc
             displayName: 'Debug npm configuration'
 
-          - script: npm publish --ignore-scripts --tag prerelease
+          - script: npm publish --ignore-scripts --tag prerelease --userconfig .npmrc
             displayName: 'Publish to Azure Artifacts as prerelease'
             continueOnError: true
 
@@ -153,7 +153,7 @@ extends:
                       Write-Host "##vso[task.setvariable variable=packageIdentifier]$packageName@$packageVersion"
                     displayName: 'Get package information'
                   
-                  - script: npm dist-tag add "$(packageIdentifier)" latest
+                  - script: npm dist-tag add "$(packageIdentifier)" latest --userconfig .npmrc
                     displayName: 'Promote package to latest'
                     continueOnError: true
                   
@@ -166,7 +166,7 @@ extends:
                       }
                     displayName: 'Check promotion status'
                   
-                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease
+                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease --userconfig .npmrc
                     displayName: 'Remove prerelease tag'
                     continueOnError: true
                   
