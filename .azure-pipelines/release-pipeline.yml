@@ -55,7 +55,7 @@ extends:
           parameters:
             includePackaging: 'true'
         
-        - ${{ if eq(variables['build.reason'], 'Manual') }}:
+        - ${{ if and(eq(variables['build.reason'], 'Manual'), eq(variables['Build.SourceBranchName'], 'master')) }}:
           - bash: |
               echo "Setting up npm authentication for public registry..."
               export NPM_TOKEN=$(npm-automation.token)
@@ -67,8 +67,8 @@ extends:
               npm publish --ignore-scripts --tag prerelease
               exit_status=$?
               if [ $exit_status -eq 1 ]; then
-                  echo "##vso[task.logissue type=warning]Publishing azure-pipelines-tool-lib was unsuccessful"
-                  echo "##vso[task.complete result=SucceededWithIssues;]"
+                  echo "##vso[task.logissue type=error]Publishing azure-pipelines-tool-lib was unsuccessful"
+                  exit 1
               fi
               
               rm .npmrc
@@ -80,7 +80,7 @@ extends:
     - stage: Release
       displayName: Release to Latest
       dependsOn: Build
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
       jobs:
         - deployment: ReleaseToLatest
           displayName: Promote to Latest Tag
