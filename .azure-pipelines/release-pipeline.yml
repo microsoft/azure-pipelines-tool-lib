@@ -1,7 +1,8 @@
 # Release pipeline for azure-pipelines-tool-lib
-# This pipeline publishes to npm with a two-stage process:
 # Stage 1: Publish as prerelease (automated)
 # Stage 2: Promote to latest (manual approval required)
+#
+# Currently configured for public npm registry
 
 trigger: none  # Manual trigger only
 
@@ -32,9 +33,7 @@ extends:
     - ES365AIMigrationTooling-Release
     
     stages:
-    # ================================
-    # STAGE 1: BUILD & PRERELEASE PUBLISHING (AUTOMATED)
-    # ================================
+    # Stage 1: Build and publish prerelease
     - stage: Build
       displayName: Build and Prerelease
       jobs:
@@ -54,42 +53,34 @@ extends:
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
-            includePackaging: $(includePackaging)
+            includePackaging: 'true'
         
-        # Conditional publishing - only from master branch
-        - ${{ if in(variables['build.reason'], 'IndividualCI', 'BatchedCI', 'Manual') }}:
-          - task: NpmAuthenticate@0
-            displayName: 'Setup npm authentication'
-            inputs:
-              workingFile: .npmrc
-            condition: eq(variables['Build.SourceBranchName'], 'master')
-
-          - script: npm publish --ignore-scripts --tag prerelease
+        - ${{ if and(eq(variables['build.reason'], 'Manual'), eq(variables['Build.SourceBranchName'], 'master')) }}:
+          - bash: |
+              echo "Setting up npm authentication for public registry..."
+              export NPM_TOKEN=$(npm-automation.token)
+              echo registry=https://registry.npmjs.org/ > .npmrc
+              echo always-auth=true >> .npmrc
+              echo //registry.npmjs.org/:_authToken=$NPM_TOKEN >> .npmrc
+              
+              # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --ignore-scripts --tag prerelease
+              npm publish --ignore-scripts --tag prerelease
+              exit_status=$?
+              if [ $exit_status -eq 1 ]; then
+                  echo "##vso[task.logissue type=error]Publishing azure-pipelines-tool-lib was unsuccessful"
+                  exit 1
+              fi
+              
+              rm .npmrc
             displayName: 'Publish to npm as prerelease'
-            condition: eq(variables['Build.SourceBranchName'], 'master')
-            continueOnError: true
+            env:
+              NPM_TOKEN: $(npm-automation.token)
 
-          - pwsh: |
-              if ($LASTEXITCODE -ne 0) {
-                  Write-Host "##vso[task.logissue type=warning]Publishing azure-pipelines-tool-lib was unsuccessful"
-                  Write-Host "##vso[task.complete result=SucceededWithIssues;]"
-              } else {
-                  Write-Host "Successfully published as prerelease"
-              }
-            displayName: 'Check publish status'
-            condition: eq(variables['Build.SourceBranchName'], 'master')
-
-          - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
-            displayName: 'Cleanup npm authentication'
-            condition: always()
-
-    # ================================
-    # STAGE 2: RELEASE TO LATEST (MANUAL APPROVAL REQUIRED)
-    # ================================
+    # Stage 2: Promote to latest (manual approval required)
     - stage: Release
       displayName: Release to Latest
       dependsOn: Build
-      condition: succeeded()
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
       jobs:
         - deployment: ReleaseToLatest
           displayName: Promote to Latest Tag
@@ -97,7 +88,7 @@ extends:
             name: 1ES-ABTT-Shared-Pool
             image: abtt-windows-2022
             os: windows
-          environment: 'npm-production'  # Requires manual approval
+          environment: 'npm-production'
           strategy:
             runOnce:
               deploy:
@@ -108,51 +99,60 @@ extends:
                   - task: NodeTool@0
                     displayName: Use Node 16
                     inputs:
-                      versionSpec: "16.x"
+                      versionSpec: "16.15.1"
                   
-                  - task: NpmAuthenticate@0
-                    displayName: 'Setup npm authentication'
-                    inputs:
-                      workingFile: .npmrc
+                  - script: |
+                      echo "Setting up npm authentication for public registry..."
+                      set NPM_TOKEN=$(npm-automation.token)
+                      echo registry=https://registry.npmjs.org/ > .npmrc
+                      echo always-auth=true >> .npmrc
+                      echo //registry.npmjs.org/:_authToken=%NPM_TOKEN% >> .npmrc
+                    displayName: 'Create .npmrc with registry'
+                    env:
+                      NPM_TOKEN: $(npm-automation.token)
                   
                   - pwsh: |
-                      # Get package name and version from package.json
                       $packageInfo = Get-Content "package.json" | ConvertFrom-Json
                       $packageName = $packageInfo.name
                       $packageVersion = $packageInfo.version
                       Write-Host "Package: $packageName@$packageVersion"
                       
-                      # Store for next steps
                       Write-Host "##vso[task.setvariable variable=packageName]$packageName"
                       Write-Host "##vso[task.setvariable variable=packageVersion]$packageVersion"
                       Write-Host "##vso[task.setvariable variable=packageIdentifier]$packageName@$packageVersion"
                     displayName: 'Get package information'
                   
-                  - script: npm dist-tag add "$(packageIdentifier)" latest
-                    displayName: 'Promote package to latest'
-                    continueOnError: true
-                  
-                  - pwsh: |
-                      if ($LASTEXITCODE -ne 0) {
-                          Write-Host "##vso[task.logissue type=error]Failed to promote package to latest"
+                  - bash: |
+                      export NPM_TOKEN=$(npm-automation.token)
+                      
+                      # To test with private registry use: npm dist-tag add "$(packageIdentifier)" latest --registry https://xyz.private.registry.com/
+                      npm dist-tag add "$(packageIdentifier)" latest
+                      exit_status=$?
+                      if [ $exit_status -ne 0 ]; then
+                          echo "##vso[task.logissue type=error]Failed to promote package to latest"
                           exit 1
-                      } else {
-                          Write-Host "Successfully promoted $(packageIdentifier) to latest"
-                      }
-                    displayName: 'Check promotion status'
+                      else
+                          echo "Successfully promoted $(packageIdentifier) to latest"
+                      fi
+                    displayName: 'Promote package to latest'
+                    env:
+                      NPM_TOKEN: $(npm-automation.token)
                   
-                  - script: npm dist-tag rm "$(packageIdentifier)" prerelease
+                  - bash: |
+                      export NPM_TOKEN=$(npm-automation.token)
+                      
+                      # To test with private registry use: npm dist-tag rm "$(packageIdentifier)" prerelease --registry https://xyz.private.registry.com/
+                      npm dist-tag rm "$(packageIdentifier)" prerelease
+                      exit_status=$?
+                      if [ $exit_status -ne 0 ]; then
+                          echo "##vso[task.logissue type=warning]Failed to remove prerelease tag, but package is now latest"
+                      else
+                          echo "Successfully removed prerelease tag from $(packageIdentifier)"
+                      fi
                     displayName: 'Remove prerelease tag'
-                    continueOnError: true
+                    env:
+                      NPM_TOKEN: $(npm-automation.token)
                   
-                  - pwsh: |
-                      if ($LASTEXITCODE -ne 0) {
-                          Write-Host "##vso[task.logissue type=warning]Failed to remove prerelease tag, but package is now latest"
-                      } else {
-                          Write-Host "Successfully removed prerelease tag from $(packageIdentifier)"
-                      }
-                    displayName: 'Check prerelease removal status'
-                  
-                  - pwsh: Remove-Item -Path ".npmrc" -Force -ErrorAction SilentlyContinue
+                  - script: del .npmrc
                     displayName: 'Cleanup npm authentication'
                     condition: always()
