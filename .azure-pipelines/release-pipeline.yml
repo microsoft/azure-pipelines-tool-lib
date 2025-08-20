@@ -60,12 +60,13 @@ extends:
           - bash: |
               echo "Setting up npm authentication for public registry..."
               export NPM_TOKEN=$(npm-automation.token)
+              
+              # Change to build directory before creating .npmrc
+              cd _build
+              
               echo registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ > .npmrc
               echo always-auth=true >> .npmrc
               echo //pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=$NPM_TOKEN >> .npmrc
-              
-              # Change to build directory before publishing
-              cd _build
               
               # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --tag prerelease
               npm publish --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ --ignore-scripts --tag prerelease
