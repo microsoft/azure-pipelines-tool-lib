@@ -59,6 +59,10 @@ extends:
           - bash: |
               echo "Setting up npm authentication for public registry..."
               export NPM_TOKEN=$(npm-automation.token)
+              
+              # Change to build directory before creating .npmrc
+              cd _build
+              
               echo registry=https://registry.npmjs.org/ > .npmrc
               echo always-auth=true >> .npmrc
               echo //registry.npmjs.org/:_authToken=$NPM_TOKEN >> .npmrc
