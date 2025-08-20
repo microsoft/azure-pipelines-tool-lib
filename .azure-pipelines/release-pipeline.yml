@@ -7,7 +7,7 @@
 trigger: none  # Manual trigger only
 
 variables:
-- group: tool-lib-npm-tokens
+- group: npm-tokens
 
 resources:
   repositories:
@@ -55,8 +55,7 @@ extends:
           parameters:
             includePackaging: 'true'
         
-        - ${{ if eq(variables['build.reason'], 'Manual') }}:
-        # - ${{ if and(eq(variables['build.reason'], 'Manual'), eq(variables['Build.SourceBranchName'], 'master')) }}:
+        - ${{ if and(eq(variables['build.reason'], 'Manual'), eq(variables['Build.SourceBranchName'], 'master')) }}:
           - bash: |
               echo "Setting up npm authentication for public registry..."
               export NPM_TOKEN=$(npm-automation.token)
@@ -64,12 +63,12 @@ extends:
               # Change to build directory before creating .npmrc
               cd _build
               
-              echo registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ > .npmrc
+              echo registry=https://registry.npmjs.org/ > .npmrc
               echo always-auth=true >> .npmrc
-              echo //pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=$NPM_TOKEN >> .npmrc
+              echo //registry.npmjs.org/:_authToken=$NPM_TOKEN >> .npmrc
               
-              # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --tag prerelease
-              npm publish --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ --ignore-scripts --tag prerelease
+              # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --ignore-scripts --tag prerelease
+              npm publish --ignore-scripts --tag prerelease
               exit_status=$?
               if [ $exit_status -eq 1 ]; then
                   echo "##vso[task.logissue type=error]Publishing azure-pipelines-tool-lib was unsuccessful"
@@ -109,9 +108,9 @@ extends:
                   - script: |
                       echo "Setting up npm authentication for public registry..."
                       set NPM_TOKEN=$(npm-automation.token)
-                      echo registry=https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ > .npmrc
+                      echo registry=https://registry.npmjs.org/ > .npmrc
                       echo always-auth=true >> .npmrc
-                      echo //pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=%NPM_TOKEN% >> .npmrc
+                      echo //registry.npmjs.org/:_authToken=%NPM_TOKEN% >> .npmrc
                     displayName: 'Create .npmrc with registry'
                     env:
                       NPM_TOKEN: $(npm-automation.token)
@@ -131,7 +130,7 @@ extends:
                       export NPM_TOKEN=$(npm-automation.token)
                       
                       # To test with private registry use: npm dist-tag add "$(packageIdentifier)" latest --registry https://xyz.private.registry.com/
-                      npm dist-tag add "$(packageIdentifier)" latest --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/
+                      npm dist-tag add "$(packageIdentifier)" latest
                       exit_status=$?
                       if [ $exit_status -ne 0 ]; then
                           echo "##vso[task.logissue type=error]Failed to promote package to latest"
@@ -147,7 +146,7 @@ extends:
                       export NPM_TOKEN=$(npm-automation.token)
                       
                       # To test with private registry use: npm dist-tag rm "$(packageIdentifier)" prerelease --registry https://xyz.private.registry.com/
-                      npm dist-tag rm "$(packageIdentifier)" prerelease --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/
+                      npm dist-tag rm "$(packageIdentifier)" prerelease
                       exit_status=$?
                       if [ $exit_status -ne 0 ]; then
                           echo "##vso[task.logissue type=warning]Failed to remove prerelease tag, but package is now latest"
