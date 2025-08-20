@@ -64,8 +64,11 @@ extends:
               echo always-auth=true >> .npmrc
               echo //pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/:_authToken=$NPM_TOKEN >> .npmrc
               
+              # Change to build directory before publishing
+              cd _build
+              
               # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --tag prerelease
-              npm publish --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ --tag prerelease
+              npm publish --registry https://pkgs.dev.azure.com/dassayantan/dassayantan/_packaging/TestPackages/npm/registry/ --ignore-scripts --tag prerelease
               exit_status=$?
               if [ $exit_status -eq 1 ]; then
                   echo "##vso[task.logissue type=error]Publishing azure-pipelines-tool-lib was unsuccessful"
