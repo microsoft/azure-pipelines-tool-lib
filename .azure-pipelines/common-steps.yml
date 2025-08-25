@@ -2,8 +2,6 @@
 # Shared build steps used across CI and release pipelines
 parameters:
 - name: includePackaging
-  type: boolean
-  default: false
 
 steps:
   - checkout: self
@@ -32,4 +30,4 @@ steps:
       npm pack
       cp *.tgz '$(Build.ArtifactStagingDirectory)'
     displayName: Run npm-pack and copy to ArtifactStagingDirectory
-    condition: eq('${{ parameters.includePackaging }}', true)
+    condition: eq('${{ parameters.includePackaging }}', 'true')
