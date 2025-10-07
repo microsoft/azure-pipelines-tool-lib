@@ -22,6 +22,8 @@ extends:
     featureFlags:
       autoBaseline: false
     sdl:
+      binskim:
+        preReleaseVersion: '4.3.1'
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
@@ -87,6 +89,9 @@ extends:
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
       jobs:
         - deployment: ReleaseToLatest
+          templateContext:
+            type: releaseJob
+            isProduction: true
           displayName: Promote to Latest Tag
           pool:
             name: 1ES-ABTT-Shared-Pool
