@@ -50,7 +50,6 @@ extends:
           - output: pipelineArtifact
             displayName: 'Publish azure-pipelines-tool-lib package to pipeline artifacts'
             targetPath: '$(Build.ArtifactStagingDirectory)'
-            artifactType: 'pipeline'
             artifactName: 'azure-pipelines-tool-lib-package'
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
@@ -92,6 +91,10 @@ extends:
           templateContext:
             type: releaseJob
             isProduction: true
+            inputs:
+            - input: pipelineArtifact
+              artifactName: 'azure-pipelines-tool-lib-package'
+              targetPath: '$(Pipeline.Workspace)/azure-pipelines-tool-lib-package'
           displayName: Promote to Latest Tag
           pool:
             name: 1ES-ABTT-Shared-Pool
@@ -102,8 +105,6 @@ extends:
             runOnce:
               deploy:
                 steps:
-                  - checkout: self
-                    clean: true
                 
                   - task: NodeTool@0
                     displayName: Use Node 16
@@ -121,7 +122,7 @@ extends:
                       NPM_TOKEN: $(npm-automation.token)
                   
                   - pwsh: |
-                      $packageInfo = Get-Content "package.json" | ConvertFrom-Json
+                      $packageInfo = Get-Content "$(Pipeline.Workspace)/azure-pipelines-tool-lib-package/package.json" | ConvertFrom-Json
                       $packageName = $packageInfo.name
                       $packageVersion = $packageInfo.version
                       Write-Host "Package: $packageName@$packageVersion"
