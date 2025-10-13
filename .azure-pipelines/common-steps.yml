@@ -29,5 +29,6 @@ steps:
   - script: |
       npm pack
       cp *.tgz '$(Build.ArtifactStagingDirectory)'
+      cp package.json '$(Build.ArtifactStagingDirectory)'
     displayName: Run npm-pack and copy to ArtifactStagingDirectory
     condition: eq('${{ parameters.includePackaging }}', 'true')
