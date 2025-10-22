@@ -2,7 +2,8 @@
 # This pipeline will be extended to the OneESPT template
 
 variables:
-  skipComponentGovernanceDetection: true
+- name: skipComponentGovernanceDetection
+  value: true
 
 resources:
   repositories:
@@ -69,4 +70,3 @@ extends:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
             includePackaging: 'false'
-            skipComponentGovernanceDetection: true
