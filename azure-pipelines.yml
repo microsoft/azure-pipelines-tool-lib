@@ -4,6 +4,12 @@
 variables:
 - name: skipComponentGovernanceDetection
   value: true
+- name: COMPONENT_GOVERNANCE_SKIP
+  value: true
+- name: SKIP_COMPONENT_GOVERNANCE
+  value: true
+- name: DisableComponentGovernance
+  value: true
 
 resources:
   repositories:
@@ -20,6 +26,8 @@ extends:
       # componentgovernance:
       #   ignoreDirectories: '$(Build.SourcesDirectory)'
       #   skipDetection: true
+      componentGovernance:
+        disable: true
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
