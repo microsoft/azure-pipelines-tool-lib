@@ -23,11 +23,11 @@ extends:
     featureFlags:
       autoBaseline: false
     sdl:
-      # componentgovernance:
-      #   ignoreDirectories: '$(Build.SourcesDirectory)'
+      componentgovernance:
+        ignoreDirectories: '$(Build.SourcesDirectory)'
       #   skipDetection: true
-      componentGovernance:
-        disable: true
+      # componentGovernance:
+      #   disable: true
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
