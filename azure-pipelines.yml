@@ -1,6 +1,9 @@
 # This Yaml Document has been converted by ESAI Yaml Pipeline Conversion Tool.
 # This pipeline will be extended to the OneESPT template
 
+variables:
+  skipComponentGovernanceDetection: true
+
 resources:
   repositories:
   - repository: 1ESPipelineTemplates
@@ -13,9 +16,9 @@ extends:
     featureFlags:
       autoBaseline: false
     sdl:
-      componentgovernance:
-        ignoreDirectories: '$(Build.SourcesDirectory)'
-        skipDetection: true
+      # componentgovernance:
+      #   ignoreDirectories: '$(Build.SourcesDirectory)'
+      #   skipDetection: true
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
