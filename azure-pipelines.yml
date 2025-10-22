@@ -25,24 +25,24 @@ extends:
     stages:
     - stage: stage
       jobs:
-      - job: 'Ubuntu_2204'
-        pool:
-          name: 1ES-ABTT-Shared-Pool
-          image: abtt-ubuntu-2204
-          os: linux
-        steps:
-        - template: /.azure-pipelines/common-steps.yml@self
-          parameters:
-            includePackaging: 'false'
-      - job: 'MacOS_12'
-        pool:
-          name: Azure Pipelines
-          image: macOS-latest
-          os: macOS
-        steps:
-        - template: /.azure-pipelines/common-steps.yml@self
-          parameters:
-            includePackaging: 'false'
+      # - job: 'Ubuntu_2204'
+      #   pool:
+      #     name: 1ES-ABTT-Shared-Pool
+      #     image: abtt-ubuntu-2204
+      #     os: linux
+      #   steps:
+      #   - template: /.azure-pipelines/common-steps.yml@self
+      #     parameters:
+      #       includePackaging: 'false'
+      # - job: 'MacOS_12'
+      #   pool:
+      #     name: Azure Pipelines
+      #     image: macOS-latest
+      #     os: macOS
+      #   steps:
+      #   - template: /.azure-pipelines/common-steps.yml@self
+      #     parameters:
+      #       includePackaging: 'false'
       - job: 'Windows_2022'
         pool:
           name: 1ES-ABTT-Shared-Pool

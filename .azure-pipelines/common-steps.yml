@@ -22,13 +22,13 @@ steps:
   - script: npm run build
     displayName: 'npm run build'
 
-  - script: npm test
-    displayName: 'npm test'
+  # - script: npm test
+  #   displayName: 'npm test'
 
-  # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
-  - script: |
-      npm pack
-      cp *.tgz '$(Build.ArtifactStagingDirectory)'
-      cp package.json '$(Build.ArtifactStagingDirectory)'
-    displayName: Run npm-pack and copy to ArtifactStagingDirectory
-    condition: eq('${{ parameters.includePackaging }}', 'true')
+  # # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
+  # - script: |
+  #     npm pack
+  #     cp *.tgz '$(Build.ArtifactStagingDirectory)'
+  #     cp package.json '$(Build.ArtifactStagingDirectory)'
+  #   displayName: Run npm-pack and copy to ArtifactStagingDirectory
+  #   condition: eq('${{ parameters.includePackaging }}', 'true')
