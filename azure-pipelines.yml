@@ -13,6 +13,8 @@ extends:
     featureFlags:
       autoBaseline: false
     sdl:
+      componentgovernance:
+        enabled: false
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
