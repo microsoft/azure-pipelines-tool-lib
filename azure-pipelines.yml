@@ -14,7 +14,8 @@ extends:
       autoBaseline: false
     sdl:
       componentgovernance:
-        enabled: false
+        ignoreDirectories: '$(Build.SourcesDirectory)'
+        skipDetection: true
       baseline:
         baselineSet: default
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
