@@ -18,7 +18,7 @@ extends:
         baselineFile: $(Build.SourcesDirectory)/.gdn/.gdnbaselines
       sourceAnalysisPool:
         name: 1ES-ABTT-Shared-Pool
-        image: abtt-windows-2022
+        image: abtt-windows-2025
         os: windows
       binskim:
         preReleaseVersion: '4.3.1'
@@ -30,7 +30,7 @@ extends:
       - job: 'Ubuntu_2204'
         pool:
           name: 1ES-ABTT-Shared-Pool
-          image: abtt-ubuntu-2204
+          image: abtt-ubuntu-2404
           os: linux
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
@@ -48,7 +48,7 @@ extends:
       - job: 'Windows_2022'
         pool:
           name: 1ES-ABTT-Shared-Pool
-          image: abtt-windows-2022
+          image: abtt-windows-2025
           os: windows
         templateContext:
           outputs:
