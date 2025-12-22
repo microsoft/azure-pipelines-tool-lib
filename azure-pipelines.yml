@@ -27,7 +27,7 @@ extends:
     stages:
     - stage: stage
       jobs:
-      - job: 'Ubuntu_2204'
+      - job: 'Ubuntu_2404'
         pool:
           name: 1ES-ABTT-Shared-Pool
           image: abtt-ubuntu-2404
@@ -45,7 +45,7 @@ extends:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
             includePackaging: 'false'
-      - job: 'Windows_2022'
+      - job: 'Windows_2025'
         pool:
           name: 1ES-ABTT-Shared-Pool
           image: abtt-windows-2025
