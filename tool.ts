@@ -1,4 +1,4 @@
-import * as httpm from 'typed-rest-client/HttpClient';
+ import * as httpm from 'typed-rest-client/HttpClient';
 import * as ifm from 'typed-rest-client/Interfaces';
 import * as path from 'path';
 import * as os from 'os';
