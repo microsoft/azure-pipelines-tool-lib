@@ -5,14 +5,19 @@ import * as os from 'os';
 import * as process from 'process';
 import * as fs from 'fs';
 import * as semver from 'semver';
+import * as util from 'util';
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as trm from 'azure-pipelines-task-lib/toolrunner';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
+const pkg = require('./package.json');
+const libJson = require('./lib.json');
+
+// English fallback messages for bundled scenarios where lib.json localization may not be available
+// Extracted from lib.json at build time so bundlers can inline them
+const englishMessages = libJson.messages || {};
 
 declare let rest;
-
-let pkg = require(path.join(__dirname, 'package.json'));
 let userAgent = 'vsts-task-installer/' + pkg.version;
 let requestOptions = {
     // ignoreSslError: true,
@@ -22,7 +27,46 @@ let requestOptions = {
     allowRetries: true,
     maxRetries: 2
 } as ifm.IRequestOptions;
-tl.setResourcePath(path.join(__dirname, 'lib.json'));
+
+// Setup localization - works in normal npm install, gracefully degrades in bundled scenarios
+let localizationEnabled = false;
+try {
+    const libJsonPath = path.join(__dirname, 'lib.json');
+    if (tl.exist(libJsonPath)) {
+        // Normal scenario: lib.json and Strings/ directory exist for full localization support
+        tl.setResourcePath(libJsonPath);
+        localizationEnabled = true;
+    } else {
+        // Bundled scenario: lib.json file not at expected path
+        tl.debug('lib.json not found at expected path - using English fallback messages');
+    }
+} catch (err) {
+    tl.debug('Could not set resource path for lib.json: ' + err + ' - using English fallback messages');
+}
+
+/**
+ * Localized string helper with English fallback for bundled scenarios.
+ * In normal scenarios, uses task-lib localization. In bundled scenarios, uses English messages.
+ * @param key Message key from lib.json
+ * @param params Parameters to format into the message
+ */
+function loc(key: string, ...params: any[]): string {
+    // In bundled scenarios where lib.json file doesn't exist, use English fallback
+    if (!localizationEnabled) {
+        let template = englishMessages[key] || key;
+        
+        // Use util.format for parameter substitution (same as tl.loc)
+        // Supports %s (string), %d (number), %i (integer), %f (float), %j (JSON), %% (literal %)
+        if (params.length > 0) {
+            return util.format(template, ...params);
+        }
+        
+        return template;
+    }
+    
+    // Normal scenario: use task-lib localization (works when lib.json + Strings/ are available)
+    return tl.loc(key, ...params);
+}
 
 export function debug(message: string): void {
     tl.debug(message);
@@ -38,7 +82,7 @@ export function prependPath(toolPath: string) {
     }
 
     // todo: add a test for path
-    console.log(tl.loc('TOOL_LIB_PrependPath', toolPath));
+    console.log(loc('TOOL_LIB_PrependPath', toolPath));
     let newPath: string = toolPath + path.delimiter + process.env['PATH'];
     tl.debug('new Path: ' + newPath);
     process.env['PATH'] = newPath;
@@ -145,7 +189,7 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
         let cachePath = path.join(cacheRoot, toolName, versionSpec, arch);
         tl.debug('checking cache: ' + cachePath);
         if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
-            console.log(tl.loc('TOOL_LIB_FoundInCache', toolName, versionSpec, arch));
+            console.log(loc('TOOL_LIB_FoundInCache', toolName, versionSpec, arch));
             toolPath = cachePath;
         }
         else {
@@ -224,7 +268,7 @@ export async function downloadTool(
             // make sure that the folder exists
             tl.mkdirP(path.dirname(destPath));
 
-            console.log(tl.loc('TOOL_LIB_Downloading', url.replace(/sig=[^&]*/, "sig=-REDACTED-")));
+            console.log(loc('TOOL_LIB_Downloading', url.replace(/sig=[^&]*/, "sig=-REDACTED-")));
             tl.debug('destination ' + destPath);
 
             if (fs.existsSync(destPath)) {
@@ -403,7 +447,7 @@ export async function cacheDir(sourceDir: string,
     arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
-    console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
+    console.log(loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source dir: ' + sourceDir);
     if (!tl.stats(sourceDir).isDirectory()) {
@@ -443,7 +487,7 @@ export async function cacheFile(sourceFile: string,
     arch?: string): Promise<string> {
     version = semver.clean(version);
     arch = arch || os.arch();
-    console.log(tl.loc('TOOL_LIB_CachingTool', tool, version, arch));
+    console.log(loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source file:' + sourceFile);
     if (!tl.stats(sourceFile).isFile()) {
@@ -494,7 +538,7 @@ export async function extract7z(file: string, dest?: string, _7zPath?: string, o
         throw new Error("parameter 'file' is required");
     }
 
-    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
+    console.log(loc('TOOL_LIB_ExtractingArchive'));
     dest = _createExtractFolder(dest);
 
     let originalCwd = process.cwd();
@@ -557,7 +601,7 @@ export async function extractTar(file: string, destination?: string): Promise<st
     // mkdir -p node/4.7.0/x64
     // tar xzC ./node/4.7.0/x64 -f node-v4.7.0-darwin-x64.tar.gz --strip-components 1
 
-    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
+    console.log(loc('TOOL_LIB_ExtractingArchive'));
     let dest = _createExtractFolder(destination);
 
     let tr: trm.ToolRunner = tl.tool('tar');
@@ -572,7 +616,7 @@ export async function extractZip(file: string, destination?: string): Promise<st
         throw new Error("parameter 'file' is required");
     }
 
-    console.log(tl.loc('TOOL_LIB_ExtractingArchive'));
+    console.log(loc('TOOL_LIB_ExtractingArchive'));
     let dest = _createExtractFolder(destination);
 
     if (process.platform == 'win32') {
