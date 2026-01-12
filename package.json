@@ -5,7 +5,7 @@
   "main": "tool.js",
   "scripts": {
     "build": "node make.js build",
-    "test": "node make.js test",
+    "test": "nyc --reporter=cobertura --reporter=html node make.js test",
     "sample": "node make.js sample",
     "units": "node make.js units"
   },
@@ -40,6 +40,7 @@
     "nock": "13.0.4",
     "shelljs": "^0.8.5",
     "typescript": "^4.0.5",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "nyc": "^15.1.0"
   }
 }
