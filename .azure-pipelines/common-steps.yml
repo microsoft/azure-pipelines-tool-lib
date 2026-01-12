@@ -31,7 +31,6 @@ steps:
       codeCoverageTool: Cobertura
       summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
       reportDirectory: '$(System.DefaultWorkingDirectory)/coverage/lcov-report'
-      pathToSources: 'src'
   
   # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
   - script: |
