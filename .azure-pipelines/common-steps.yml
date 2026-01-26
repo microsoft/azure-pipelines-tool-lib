@@ -25,6 +25,13 @@ steps:
   - script: npm test
     displayName: 'npm test'
 
+  - task: PublishCodeCoverageResults@1
+    displayName: Publish Code Coverage Results
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/coverage/lcov-report'
+  
   # Generate a pipeline artifact so we can publish the package manually if there are issues with automation
   - script: |
       npm pack
