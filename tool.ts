@@ -310,11 +310,6 @@ export async function downloadTool(
                                 file.end();
                                 reject(err);
                             })
-                            .on('aborted', () => {
-                                // this block is for Node10 compatibility since it doesn't emit 'error' event after 'aborted' one
-                                file.end();
-                                reject(new Error('Aborted'));
-                            })
                             .pipe(file);
                     } catch (err) {
                         reject(err);
