@@ -1,12 +1,16 @@
-# Release pipeline for azure-pipelines-tool-lib
-# Publishes to npm with the latest tag
-#
-# Currently configured for public npm registry
+name: $(Date:yyyyMMdd)$(Rev:.r)
 
-trigger: none  # Manual trigger only
+trigger: none
+pr: none
 
 variables:
-- group: npm-tokens
+- group: esrp-npm-release
+- name: EsrpMainPublisher
+  value: 'ESRPRELPACMAN'
+- name: EsrpServiceEndpointUrl
+  value: 'https://api.esrp.microsoft.com'
+- name: EsrpDomainTenantId
+  value: '975f013f-7f24-47e8-a7d3-abc4752bf346'
 
 resources:
   repositories:
@@ -32,49 +36,82 @@ extends:
         os: windows
     customBuildTags:
     - ES365AIMigrationTooling-Release
-    
+
     stages:
-    - stage: Build
-      displayName: Build and Publish
+    - stage: BuildAndPack
+      displayName: Build, test, and pack
       jobs:
-      - job: build
-        displayName: Build and Publish to npm
+      - job: pack
+        pool:
+          name: 1ES-ABTT-Shared-Pool
+          image: abtt-ubuntu-2404
+          os: linux
+        templateContext:
+          outputs:
+          - output: pipelineArtifact
+            targetPath: '$(Build.ArtifactStagingDirectory)/npm-packages'
+            artifactName: npm-packages
+        steps:
+        - template: /.azure-pipelines/common-steps.yml@self
+          parameters:
+            includePackaging: 'true'
+        - bash: |
+            set -e
+            mkdir -p "$(Build.ArtifactStagingDirectory)/npm-packages/packages"
+            npm pack --pack-destination "$(Build.ArtifactStagingDirectory)/npm-packages/packages"
+          displayName: Pack npm package for ESRP
+          workingDirectory: _build
+        - bash: |
+            count=$(ls -1 "$(Build.ArtifactStagingDirectory)/npm-packages/packages"/*.tgz 2>/dev/null | wc -l)
+            echo "Found $count .tgz file(s)."
+            if [ "$count" -eq 0 ]; then
+              echo "ERROR: npm pack produced no .tgz"
+              exit 1
+            fi
+          displayName: Verify npm package exists
+        - bash: |
+            set -e
+            for tgz in "$(Build.ArtifactStagingDirectory)/npm-packages/packages"/*.tgz; do
+              if tar -tzf "$tgz" | grep -E '(^|/)_manifest/'; then
+                echo "ERROR: $tgz contains an SBOM _manifest/ folder"
+                exit 1
+              fi
+            done
+          displayName: Verify npm package contents
+
+    - stage: PublishToNpmViaESRP
+      displayName: Publish to npm via ESRP
+      dependsOn: BuildAndPack
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      jobs:
+      - job: esrp
         pool:
           name: 1ES-ABTT-Shared-Pool
           image: abtt-windows-2025
           os: windows
         templateContext:
-          outputs:
-          - output: pipelineArtifact
-            displayName: 'Publish azure-pipelines-tool-lib package to pipeline artifacts'
-            targetPath: '$(Build.ArtifactStagingDirectory)'
-            artifactName: 'azure-pipelines-tool-lib-package'
+          type: releaseJob
+          isProduction: true
+          inputs:
+          - input: pipelineArtifact
+            artifactName: npm-packages
+            targetPath: '$(Pipeline.Workspace)/npm-packages'
         steps:
-        - template: /.azure-pipelines/common-steps.yml@self
-          parameters:
-            includePackaging: 'true'
-        
-        - ${{ if and(eq(variables['build.reason'], 'Manual'), eq(variables['Build.SourceBranchName'], 'master')) }}:
-          - bash: |
-              echo "Setting up npm authentication for public registry..."
-              export NPM_TOKEN=$(npm-automation.token)
-              
-              # Change to build directory before creating .npmrc
-              cd _build
-              
-              echo registry=https://registry.npmjs.org/ > .npmrc
-              echo always-auth=true >> .npmrc
-              echo //registry.npmjs.org/:_authToken=$NPM_TOKEN >> .npmrc
-              
-              # To test with private registry use: npm publish --registry https://xyz.private.registry.com/ --ignore-scripts
-              npm publish --ignore-scripts
-              exit_status=$?
-              if [ $exit_status -eq 1 ]; then
-                  echo "##vso[task.logissue type=error]Publishing azure-pipelines-tool-lib was unsuccessful"
-                  exit 1
-              fi
-              
-              rm .npmrc
-            displayName: 'Publish to npm'
-            env:
-              NPM_TOKEN: $(npm-automation.token)
+        - task: EsrpRelease@12
+          displayName: Publish package to npm via ESRP
+          inputs:
+            connectedservicename: '$(EsrpServiceConnection)'
+            usemanagedidentity: true
+            keyvaultname: '$(EsrpKeyVault)'
+            signcertname: '$(EsrpSignCert)'
+            clientid: '$(EsrpClientId)'
+            intent: 'PackageDistribution'
+            contenttype: 'npm'
+            contentsource: 'Folder'
+            folderlocation: '$(Pipeline.Workspace)/npm-packages/packages'
+            waitforreleasecompletion: true
+            owners: '$(EsrpOwners)'
+            approvers: '$(EsrpApprovers)'
+            serviceendpointurl: '$(EsrpServiceEndpointUrl)'
+            mainpublisher: '$(EsrpMainPublisher)'
+            domaintenantid: '$(EsrpDomainTenantId)'
