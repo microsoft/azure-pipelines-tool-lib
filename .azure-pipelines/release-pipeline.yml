@@ -1,5 +1,10 @@
 name: $(Date:yyyyMMdd)$(Rev:.r)
 
+parameters:
+- name: dryRun
+  type: boolean
+  default: false
+
 trigger: none
 pr: none
 
@@ -79,39 +84,40 @@ extends:
             done
           displayName: Verify npm package contents
 
-    - stage: PublishToNpmViaESRP
-      displayName: Publish to npm via ESRP
-      dependsOn: BuildAndPack
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      jobs:
-      - job: esrp
-        pool:
-          name: 1ES-ABTT-Shared-Pool
-          image: abtt-windows-2025
-          os: windows
-        templateContext:
-          type: releaseJob
-          isProduction: true
-          inputs:
-          - input: pipelineArtifact
-            artifactName: npm-packages
-            targetPath: '$(Pipeline.Workspace)/npm-packages'
-        steps:
-        - task: EsrpRelease@12
-          displayName: Publish package to npm via ESRP
-          inputs:
-            connectedservicename: '$(EsrpServiceConnection)'
-            usemanagedidentity: true
-            keyvaultname: '$(EsrpKeyVault)'
-            signcertname: '$(EsrpSignCert)'
-            clientid: '$(EsrpClientId)'
-            intent: 'PackageDistribution'
-            contenttype: 'npm'
-            contentsource: 'Folder'
-            folderlocation: '$(Pipeline.Workspace)/npm-packages/packages'
-            waitforreleasecompletion: true
-            owners: '$(EsrpOwners)'
-            approvers: '$(EsrpApprovers)'
-            serviceendpointurl: '$(EsrpServiceEndpointUrl)'
-            mainpublisher: '$(EsrpMainPublisher)'
-            domaintenantid: '$(EsrpDomainTenantId)'
+    - ${{ if eq(parameters.dryRun, false) }}:
+      - stage: PublishToNpmViaESRP
+        displayName: Publish to npm via ESRP
+        dependsOn: BuildAndPack
+        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+        jobs:
+        - job: esrp
+          pool:
+            name: 1ES-ABTT-Shared-Pool
+            image: abtt-windows-2025
+            os: windows
+          templateContext:
+            type: releaseJob
+            isProduction: true
+            inputs:
+            - input: pipelineArtifact
+              artifactName: npm-packages
+              targetPath: '$(Pipeline.Workspace)/npm-packages'
+          steps:
+          - task: EsrpRelease@12
+            displayName: Publish package to npm via ESRP
+            inputs:
+              connectedservicename: '$(EsrpServiceConnection)'
+              usemanagedidentity: true
+              keyvaultname: '$(EsrpKeyVault)'
+              signcertname: '$(EsrpSignCert)'
+              clientid: '$(EsrpClientId)'
+              intent: 'PackageDistribution'
+              contenttype: 'npm'
+              contentsource: 'Folder'
+              folderlocation: '$(Pipeline.Workspace)/npm-packages/packages'
+              waitforreleasecompletion: true
+              owners: '$(EsrpOwners)'
+              approvers: '$(EsrpApprovers)'
+              serviceendpointurl: '$(EsrpServiceEndpointUrl)'
+              mainpublisher: '$(EsrpMainPublisher)'
+              domaintenantid: '$(EsrpDomainTenantId)'
