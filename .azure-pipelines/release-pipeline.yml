@@ -59,7 +59,7 @@ extends:
         steps:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
-            includePackaging: 'true'
+            includePackaging: 'false'
         - bash: |
             set -e
             mkdir -p "$(Build.ArtifactStagingDirectory)/npm-packages/packages"
