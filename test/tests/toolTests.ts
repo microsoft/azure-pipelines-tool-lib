@@ -177,7 +177,7 @@ describe('Tool Tests', function () {
             // General parameters:
             let username: string = "usr";
             let correctPassword: string = "pass";
-            let url: string = "https://httpbin.org/basic-auth/" + username + "/" + correctPassword;
+            let url: string = "https://httpbingo.org/basic-auth/" + username + "/" + correctPassword;
 
             // First try downloading with WRONG credentials and verify receiving status code 401:
             try {
