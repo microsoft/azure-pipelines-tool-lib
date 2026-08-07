@@ -19,7 +19,7 @@ const englishMessages = libJson.messages || {};
 
 declare let rest;
 let userAgent = 'vsts-task-installer/' + pkg.version;
-let requestOptions = {
+const defaultRequestOptions = {
     // ignoreSslError: true,
     proxy: tl.getHttpProxyConfiguration(),
     cert: tl.getHttpCertConfiguration(),
@@ -242,17 +242,20 @@ export function findLocalToolVersions(toolName: string, arch?: string) {
  * @param fileName           optional fileName.  Should typically not use (will be a guid for reliability). Can pass fileName with an absolute path.
  * @param handlers           optional handlers array.  Auth handlers to pass to the HttpClient for the tool download.
  * @param additionalHeaders  optional custom HTTP headers.  This is passed to the REST client that downloads the tool.
+ * @param requestOptions    optional request options.  This is passed to the REST client that downloads the tool.
  */
 export async function downloadTool(
     url: string,
     fileName?: string,
     handlers?: ifm.IRequestHandler[],
-    additionalHeaders?: ifm.IHeaders
+    additionalHeaders?: ifm.IHeaders,
+    requestOptions?: ifm.IRequestOptions
 ): Promise<string> {
     return new Promise<string>(async (resolve, reject: (err: Error) => void) => {
         try {
             handlers = handlers || null;
-            let http: httpm.HttpClient = new httpm.HttpClient(userAgent, handlers, requestOptions);
+            requestOptions = { ...defaultRequestOptions, ...requestOptions || {} }
+            const http = new httpm.HttpClient(userAgent, handlers, requestOptions);
             tl.debug(fileName);
             fileName = fileName || uuidV4();
 
@@ -673,7 +676,7 @@ function _createExtractFolder(dest?: string): string {
  */
 export async function scrape(url: string, regex: RegExp, handlers?: ifm.IRequestHandler[]): Promise<string[]> {
     handlers = handlers || null;
-    let http: httpm.HttpClient = new httpm.HttpClient(userAgent, handlers, requestOptions);
+    let http: httpm.HttpClient = new httpm.HttpClient(userAgent, handlers, defaultRequestOptions);
     let output: string = await (await http.get(url)).readBody();
 
     let matches = output.match(regex);
