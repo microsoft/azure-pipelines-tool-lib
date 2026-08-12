@@ -1,7 +1,7 @@
 {
   "loc.messages.TOOL_LIB_CachingTool": "Mise en cache de l’outil : %s %s %s",
   "loc.messages.TOOL_LIB_Downloading": "Téléchargement : %s",
-  "loc.messages.TOOL_LIB_ExtractingArchive": "Extraction de l’archive",
+  "loc.messages.TOOL_LIB_ExtractingArchive": "Extraction de l'archive",
   "loc.messages.TOOL_LIB_FoundInCache": "Outil trouvé dans le cache : %s %s %s",
   "loc.messages.TOOL_LIB_PrependPath": "Préfixation de la variable d’environnement PATH avec le répertoire : %s"
 }
