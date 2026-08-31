@@ -36,7 +36,7 @@ extends:
         - template: /.azure-pipelines/common-steps.yml@self
           parameters:
             includePackaging: 'false'
-      - job: 'MacOS_12'
+      - job: 'MacOS_Latest'
         pool:
           name: Azure Pipelines
           image: macOS-latest
