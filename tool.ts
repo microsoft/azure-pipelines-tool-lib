@@ -8,6 +8,7 @@ import * as semver from 'semver';
 import * as util from 'util';
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as trm from 'azure-pipelines-task-lib/toolrunner';
+import { extractZipSecure } from './secureZip';
 const cmp = require('semver-compare');
 const uuidV4 = require('uuid/v4');
 const pkg = require('./package.json');
@@ -644,6 +645,8 @@ export async function extractZip(file: string, destination?: string): Promise<st
 
     return dest;
 }
+
+export { extractZipSecure };
 
 function _createExtractFolder(dest?: string): string {
     if (!dest) {
