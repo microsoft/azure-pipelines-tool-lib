@@ -1,6 +1,6 @@
 {
   "name": "azure-pipelines-tool-lib",
-  "version": "2.278.0",
+  "version": "2.280.0",
   "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
   "scripts": {
