@@ -1,6 +1,6 @@
 {
   "name": "azure-pipelines-tool-lib",
-  "version": "2.279.2",
+  "version": "2.280.0",
   "description": "Azure Pipelines Tool Installer Lib for CI/CD Tasks",
   "main": "tool.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "azure-pipelines-task-lib": "^5.279.0",
     "semver": "^5.7.0",
     "semver-compare": "^1.0.0",
-    "typed-rest-client": "^3.1.0",
+    "typed-rest-client": "^3.1.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
   "overrides": {
     "brace-expansion@1.x": "^1.1.18",
     "minimatch": "^3.1.5",
-    "js-yaml@3.x": {".": "^3.15.1"},
+    "js-yaml@3.x": {".": "^3.15.2"},
     "picomatch@2.x": "^2.3.2"
   }
 }
