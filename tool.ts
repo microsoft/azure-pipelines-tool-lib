@@ -9,7 +9,7 @@ import * as util from 'util';
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as trm from 'azure-pipelines-task-lib/toolrunner';
 const cmp = require('semver-compare');
-const uuidV4 = require('uuid/v4');
+const { v4: uuidV4 } = require('uuid');
 const pkg = require('./package.json');
 const libJson = require('./lib.json');
 
