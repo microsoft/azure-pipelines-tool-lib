@@ -188,6 +188,9 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
         let cacheRoot = _getCacheRoot();
         let cachePath = path.join(cacheRoot, toolName, versionSpec, arch);
         tl.debug('checking cache: ' + cachePath);
+        if (!_isUnderRoot(cacheRoot, cachePath)) {
+            throw new Error(loc('TOOL_LIB_CachePathOutsideRoot')); // reject anything that resolves outside the expected directory
+        }
         if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
             console.log(loc('TOOL_LIB_FoundInCache', toolName, versionSpec, arch));
             toolPath = cachePath;
@@ -709,4 +712,10 @@ function _getAgentTemp(): string {
     }
 
     return tempDirectory;
+}
+
+function _isUnderRoot(root: string, candidate: string): boolean {
+    const resolvedRoot = path.resolve(root) + path.sep;
+    const resolvedCandidate = path.resolve(candidate);
+    return resolvedCandidate.startsWith(resolvedRoot);
 }

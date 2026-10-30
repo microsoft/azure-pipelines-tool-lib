@@ -3,5 +3,6 @@
   "loc.messages.TOOL_LIB_Downloading": "Downloading: %s",
   "loc.messages.TOOL_LIB_ExtractingArchive": "Extracting archive",
   "loc.messages.TOOL_LIB_FoundInCache": "Found tool in cache: %s %s %s",
-  "loc.messages.TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s"
+  "loc.messages.TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s",
+  "loc.messages.TOOL_LIB_CachePathOutsideRoot": "Cache path resolves outside the expected directory"
 }
