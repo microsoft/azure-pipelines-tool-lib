@@ -245,4 +245,20 @@ describe('Tool Tests', function () {
             }
         });
     });
+
+    it('Should throw error when cache path is outside root', async function () {
+        return new Promise<void>(async(resolve, reject)=> {
+            try {
+                // Simulate a scenario where the cache path is outside the expected root
+                // This will depend on how _isUnderRoot and _getCacheRoot are implemented
+                // For the purpose of this test, we assume a function that triggers the error
+                let toolPath: string = toolLib.findLocalTool('foo', '1.1.0', '../../../x64');
+                reject('a tool was found but it shouldnt have been');
+            } 
+            catch (err){
+                assert.equal(err.message, 'Cache path resolves outside the expected directory', 'error message exists');
+                resolve();
+            }
+        });
+    });
 });

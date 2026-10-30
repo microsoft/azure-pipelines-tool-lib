@@ -9,6 +9,9 @@
         "TOOL_LIB_FoundInCache": "Found tool in cache: %s %s %s",
         "_TOOL_LIB_FoundInCache.comment": "This informational log message indicates that the request tool is already cached, and does not need to be downloaded again. %s %s %s represent the tool name, version information, and processor architecture.",
         "TOOL_LIB_PrependPath": "Prepending PATH environment variable with directory: %s",
-        "_TOOL_LIB_PrependPath.comment": "This informational log message indicates that a directory is being prepended to the front of the PATH environment variable. The directories specified by the PATH environment variable are used to resolve the location of command line tools."
+        "_TOOL_LIB_PrependPath.comment": "This informational log message indicates that a directory is being prepended to the front of the PATH environment variable. The directories specified by the PATH environment variable are used to resolve the location of command line tools.",
+        "TOOL_LIB_CachePathOutsideRoot": "Cache path resolves outside the expected directory",
+        "_TOOL_LIB_CachePathOutsideRoot.comment": "This error message indicates that the cache path being used resolves outside the expected cache root directory."
+        
     }
 }
