@@ -1,5 +1,8 @@
 {
     "messages": {
+        "TOOL_LIB_InvalidCachePath": "Invalid cache path parameter: %s. Use a safe relative path component.",
+        "_TOOL_LIB_InvalidCachePath.comment": "%s is a fixed parameter name, not the rejected input.",
+        "TOOL_LIB_InvalidCacheVersion": "Invalid cache version. Use an explicit semantic version.",
         "TOOL_LIB_CachingTool": "Caching tool: %s %s %s",
         "_TOOL_LIB_CachingTool.comment": "This informational log message indicates that a tool, that was just downloaded, is being copied into the cache directory. %s %s %s represent the tool name, version information, and processor architecture.",
         "TOOL_LIB_Downloading": "Downloading: %s",
