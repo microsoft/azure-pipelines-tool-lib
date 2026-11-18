@@ -11,18 +11,16 @@ describe('Cache path validation', function () {
     let fixture: string;
     let root: string;
     let previousEnvironment: { [name: string]: string | undefined };
-    let previousTools: string;
     const hooks: { target: any; name: string; descriptor: PropertyDescriptor }[] = [];
     const environmentNames = [featureVariable, 'AGENT_TOOLSDIRECTORY', 'AGENT_VERSION'];
 
     beforeEach(function () {
-        previousTools = tl.getVariable('Agent.ToolsDirectory');
         previousEnvironment = {};
         environmentNames.forEach(name => previousEnvironment[name] = process.env[name]);
         fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tool-lib-cache-test-'));
         root = path.join(fixture, 'cache');
         fs.mkdirSync(root);
-        tl.setVariable('Agent.ToolsDirectory', root);
+        process.env['AGENT_TOOLSDIRECTORY'] = root;
         process.env['AGENT_VERSION'] = '2.115.0';
         process.env[featureVariable] = 'true';
     });
@@ -32,7 +30,6 @@ describe('Cache path validation', function () {
             const hook = hooks.pop();
             Object.defineProperty(hook.target, hook.name, hook.descriptor);
         }
-        tl.setVariable('Agent.ToolsDirectory', previousTools || '');
         environmentNames.forEach(name => {
             if (previousEnvironment[name] === undefined) {
                 delete process.env[name];

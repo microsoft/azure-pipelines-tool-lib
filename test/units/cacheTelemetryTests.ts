@@ -32,7 +32,6 @@ describe('Cache path telemetry', function () {
     let fixture: string;
     let root: string;
     let output: string;
-    let previousTools: string;
     let environment: { [name: string]: string | undefined };
     const correlationNames = ['SYSTEM_TASKINSTANCEID', 'SYSTEM_JOBID', 'SYSTEM_PLANID'];
     const names = [feature, diagnostic, 'AGENT_TOOLSDIRECTORY', 'AGENT_VERSION', ...correlationNames];
@@ -42,11 +41,10 @@ describe('Cache path telemetry', function () {
     beforeEach(async function () {
         environment = {};
         names.forEach(name => environment[name] = process.env[name]);
-        previousTools = tl.getVariable('Agent.ToolsDirectory');
         fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tool-lib-telemetry-'));
         root = path.join(fixture, 'cache');
         fs.mkdirSync(root);
-        tl.setVariable('Agent.ToolsDirectory', root);
+        process.env.AGENT_TOOLSDIRECTORY = root;
         process.env.AGENT_VERSION = '3.232.1';
         process.env[feature] = 'true';
         delete process.env[diagnostic];
@@ -75,7 +73,6 @@ describe('Cache path telemetry', function () {
             Object.defineProperty(tl, hook.name, hook.descriptor);
         }
         tl.setStdStream(process.stdout);
-        tl.setVariable('Agent.ToolsDirectory', previousTools || '');
         names.forEach(name => {
             if (environment[name] === undefined) {
                 delete process.env[name];
@@ -206,6 +203,8 @@ describe('Cache path telemetry', function () {
 
     it('caps failed production publish attempts while preserving every rejection', function () {
         let attempts = 0;
+        const debugMessages: string[] = [];
+        hook('debug', (message: string) => { debugMessages.push(message); });
         hook('command', () => {
             attempts++;
             throw new Error('private-publisher-error');
@@ -214,7 +213,7 @@ describe('Cache path telemetry', function () {
             assert.throws(() => tool.findLocalTool('../outside', '1.2.3'), /Invalid cache path/);
         }
         assert.strictEqual(attempts, 1);
-        assert.strictEqual(output.split('Tool cache path telemetry could not be published.').length - 1, 1);
+        assert.deepStrictEqual(debugMessages, ['Tool cache path telemetry could not be published.']);
         assert.ok(!output.includes('private-publisher-error'));
     });
 
@@ -427,9 +426,12 @@ describe('Cache path telemetry', function () {
 
     it('logs only a fixed message when telemetry publishing fails', function () {
         process.env[diagnostic] = 'true';
+        const debugMessages: string[] = [];
+        hook('debug', (message: string) => { debugMessages.push(message); });
         hook('command', () => { throw new Error('private-publisher-error'); });
         assert.strictEqual(tool.findLocalTool('safe', '1.2.3'), undefined);
-        assert.ok(output.includes('Tool cache path telemetry could not be published.'));
+        assert.ok(debugMessages.includes('Tool cache path telemetry could not be published.'));
+        assert.ok(!debugMessages.some(message => message.includes('private-publisher-error')));
         assert.ok(!output.includes('private-publisher-error'));
     });
 
