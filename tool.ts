@@ -156,6 +156,223 @@ export function evaluateVersions(versions: string[], versionSpec: string): strin
 //-----------------------------
 // Local Tool Cache Functions
 //-----------------------------
+// getPipelineFeature defaults to false. Read its documented environment mapping
+// directly so only an explicit false disables protection and its telemetry.
+function _cachePathValidationEnabled(): boolean {
+    return (process.env['DISTRIBUTEDTASK_TASKS_TOOLLIBCACHEPATHVALIDATIONENABLED'] || '').toLowerCase() !== 'false';
+}
+
+type CacheOperation = 'findLocalTool' | 'findLocalToolVersions' | 'cacheDir' | 'cacheFile';
+type CacheOutcome = 'hit' | 'miss' | 'cached' | 'rejected' | 'error';
+type CacheReason = 'missing' | 'rooted' | 'traversal' | 'separator' | 'invalidCharacter' | 'windowsName' | 'invalidVersion';
+interface CacheIssue {
+    parameter: 'toolName' | 'arch' | 'version' | 'targetFile';
+    reason: CacheReason;
+}
+interface CacheCorrelation {
+    taskInstanceId?: string;
+    jobId?: string;
+    planId?: string;
+}
+
+class CachePathValidationError extends Error {
+    constructor(message: string, public readonly issue: CacheIssue) {
+        super(message);
+    }
+}
+
+function _cacheComponentReason(value: string): CacheReason | undefined {
+    if (typeof value !== 'string' || !value) {
+        return 'missing';
+    }
+    if (/^[\\/]|^[a-z]:/i.test(value)) {
+        return 'rooted';
+    }
+    if (value.split(/[\\/]/).some(component => component === '.' || component === '..')) {
+        return 'traversal';
+    }
+    if (/[\\/]/.test(value)) {
+        return 'separator';
+    }
+    if (/[:<>"|?*\x00-\x1f\x7f]/.test(value)) {
+        return 'invalidCharacter';
+    }
+    if (/[. ]$/.test(value) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(value)) {
+        return 'windowsName';
+    }
+    return undefined;
+}
+
+function _cacheTargetReason(targetFile: string): CacheReason | undefined {
+    if (typeof targetFile !== 'string' || !targetFile) {
+        return 'missing';
+    }
+    if (/^[\\/]|^[a-z]:/i.test(targetFile)) {
+        return 'rooted';
+    }
+    for (const component of targetFile.split(/[\\/]/)) {
+        const reason = _cacheComponentReason(component);
+        if (reason) {
+            return reason;
+        }
+    }
+    return undefined;
+}
+
+function _cacheCorrelation(): CacheCorrelation {
+    const correlation: CacheCorrelation = {};
+    const fields: { variable: string; property: keyof CacheCorrelation }[] = [
+        { variable: 'SYSTEM_TASKINSTANCEID', property: 'taskInstanceId' },
+        { variable: 'SYSTEM_JOBID', property: 'jobId' },
+        { variable: 'SYSTEM_PLANID', property: 'planId' }
+    ];
+    for (const field of fields) {
+        const value = process.env[field.variable];
+        if (value && value.length === 36 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+            correlation[field.property] = value.toLowerCase();
+        }
+    }
+    return correlation;
+}
+
+// At most one rejection and one operation error per public cache API per process.
+const publishedCacheFailures = new Set<string>();
+
+function _publishCacheTelemetry(operation: CacheOperation, issue: CacheIssue | undefined, outcome: CacheOutcome): void {
+    // Only emission is best-effort. Never swallow or replace an operation error.
+    try {
+        const diagnostic = (process.env['TOOLLIB_CACHEPATHVALIDATIONDIAGNOSTIC'] || '').toLowerCase() === 'true';
+        const key = `${operation}:${outcome}`;
+        if (!diagnostic && ((outcome !== 'rejected' && outcome !== 'error') || publishedCacheFailures.has(key))) {
+            return;
+        }
+        const agentVersion = tl.getVariable('Agent.Version');
+        if (!semver.valid(agentVersion || '') || !semver.gte(agentVersion, '2.120.0')) {
+            return;
+        }
+        if (!diagnostic) {
+            publishedCacheFailures.add(key);
+        }
+        const decision = outcome === 'rejected' ? 'rejected' : 'accepted';
+        const platform = os.platform();
+        tl.command('telemetry.publish', { area: 'TaskHub', feature: 'ToolLibCachePathValidation' }, JSON.stringify({
+            schemaVersion: 1,
+            libraryVersion: pkg.version,
+            platform: platform === 'win32' || platform === 'linux' || platform === 'darwin' ? platform : 'other',
+            operation,
+            validationEnabled: true,
+            diagnostic,
+            decision,
+            parameter: decision !== 'accepted' && issue ? issue.parameter : 'none',
+            reason: decision !== 'accepted' && issue ? issue.reason : 'none',
+            outcome,
+            ..._cacheCorrelation()
+        }));
+    } catch {
+        try {
+            tl.debug('Tool cache path telemetry could not be published.');
+        } catch {
+            // A failed logging transport must not change the cache operation.
+        }
+    }
+}
+
+function _cacheRead<T>(operation: CacheOperation, action: (enabled: boolean) => T, found: (result: T) => boolean): T {
+    const enabled = _cachePathValidationEnabled();
+    if (!enabled) {
+        return action(false);
+    }
+    let result: T;
+    try {
+        result = action(true);
+    } catch (error) {
+        _publishCacheTelemetry(operation, error instanceof CachePathValidationError ? error.issue : undefined,
+            error instanceof CachePathValidationError ? 'rejected' : 'error');
+        throw error;
+    }
+    _publishCacheTelemetry(operation, undefined, found(result) ? 'hit' : 'miss');
+    return result;
+}
+
+async function _cacheWrite(operation: CacheOperation, action: (enabled: boolean) => Promise<string>): Promise<string> {
+    const enabled = _cachePathValidationEnabled();
+    if (!enabled) {
+        return action(false);
+    }
+    let result: string;
+    try {
+        result = await action(true);
+    } catch (error) {
+        _publishCacheTelemetry(operation, error instanceof CachePathValidationError ? error.issue : undefined,
+            error instanceof CachePathValidationError ? 'rejected' : 'error');
+        throw error;
+    }
+    _publishCacheTelemetry(operation, undefined, 'cached');
+    return result;
+}
+
+function _validateCacheComponent(value: string, parameter: 'toolName' | 'arch'): void {
+    // Apply Windows restrictions on every platform, including drive-relative paths,
+    // alternate data streams and names that Windows normalizes to another entry.
+    const reason = _cacheComponentReason(value);
+    if (reason) {
+        // Never include rejected input in task logging commands.
+        throw new CachePathValidationError(loc('TOOL_LIB_InvalidCachePath', parameter), { parameter, reason });
+    }
+}
+
+function _validateCacheIdentity(tool: string, arch: string, validationEnabled: boolean): void {
+    if (validationEnabled) {
+        _validateCacheComponent(tool, 'toolName');
+        _validateCacheComponent(arch, 'arch');
+    }
+}
+
+function _cacheVersion(version: string, validationEnabled: boolean): string {
+    const cleaned = validationEnabled && typeof version !== 'string' ? null : semver.clean(version);
+    if (validationEnabled && !cleaned) {
+        throw new CachePathValidationError(loc('TOOL_LIB_InvalidCacheVersion'), { parameter: 'version', reason: 'invalidVersion' });
+    }
+    return cleaned;
+}
+
+function _validateCacheTarget(targetFile: string, validationEnabled: boolean): void {
+    if (validationEnabled) {
+        // Nested relative destinations are supported, but not traversal, rooted
+        // paths or Windows syntax that could escape on a different platform.
+        const reason = _cacheTargetReason(targetFile);
+        if (reason) {
+            throw new CachePathValidationError(loc('TOOL_LIB_InvalidCachePath', 'targetFile'), { parameter: 'targetFile', reason });
+        }
+    }
+}
+
+function _validateCachePath(root: string, candidate: string, parameter: CacheIssue['parameter'], validationEnabled: boolean): void {
+    if (validationEnabled) {
+        // A string prefix would also accept a sibling such as cache-other.
+        // This is lexical containment, not protection against filesystem links.
+        const relative = path.relative(path.resolve(root), path.resolve(candidate));
+        if (!relative || relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {
+            throw new CachePathValidationError(loc('TOOL_LIB_InvalidCachePath', parameter), { parameter, reason: 'traversal' });
+        }
+    }
+}
+
+function _cacheToolPath(tool: string, version: string, arch: string, validationEnabled: boolean): string {
+    if (!validationEnabled) {
+        return path.join(_getCacheRoot(), tool, _cacheVersion(version, false), arch);
+    }
+    _validateCacheIdentity(tool, arch, validationEnabled);
+    const root = _getCacheRoot();
+    const toolPath = path.join(root, tool);
+    _validateCachePath(root, toolPath, 'toolName', validationEnabled);
+    const versionPath = path.join(toolPath, _cacheVersion(version, validationEnabled));
+    _validateCachePath(toolPath, versionPath, 'version', validationEnabled);
+    const archPath = path.join(versionPath, arch);
+    _validateCachePath(versionPath, archPath, 'arch', validationEnabled);
+    return archPath;
+}
+
 /**
  * finds the path to a tool in the local installed tool cache
  *
@@ -164,6 +381,11 @@ export function evaluateVersions(versions: string[], versionSpec: string): strin
  * @param arch          optional arch.  defaults to arch of computer
  */
 export function findLocalTool(toolName: string, versionSpec: string, arch?: string): string {
+    return _cacheRead('findLocalTool',
+        enabled => _findLocalTool(toolName, versionSpec, arch, enabled), result => !!result);
+}
+
+function _findLocalTool(toolName: string, versionSpec: string, arch: string | undefined, validationEnabled: boolean): string {
     if (!toolName) {
         throw new Error('toolName parameter is required');
     }
@@ -173,10 +395,11 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
     }
 
     arch = arch || os.arch();
+    _validateCacheIdentity(toolName, arch, validationEnabled);
 
     // attempt to resolve an explicit version
     if (!isExplicitVersion(versionSpec)) {
-        let localVersions: string[] = findLocalToolVersions(toolName, arch);
+        let localVersions: string[] = _findLocalToolVersions(toolName, arch, validationEnabled);
         let match = evaluateVersions(localVersions, versionSpec);
         versionSpec = match;
     }
@@ -185,8 +408,7 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
     let toolPath: string;
     if (versionSpec) {
         versionSpec = semver.clean(versionSpec);
-        let cacheRoot = _getCacheRoot();
-        let cachePath = path.join(cacheRoot, toolName, versionSpec, arch);
+        let cachePath = _cacheToolPath(toolName, versionSpec, arch, validationEnabled);
         tl.debug('checking cache: ' + cachePath);
         if (tl.exist(cachePath) && tl.exist(`${cachePath}.complete`)) {
             console.log(loc('TOOL_LIB_FoundInCache', toolName, versionSpec, arch));
@@ -207,17 +429,28 @@ export function findLocalTool(toolName: string, versionSpec: string, arch?: stri
  * @param arch      optional arch.  defaults to arch of computer
  */
 export function findLocalToolVersions(toolName: string, arch?: string) {
+    return _cacheRead('findLocalToolVersions',
+        enabled => _findLocalToolVersions(toolName, arch, enabled), result => result.length > 0);
+}
+
+function _findLocalToolVersions(toolName: string, arch: string | undefined, validationEnabled: boolean) {
     let versions: string[] = [];
 
     arch = arch || os.arch();
-    let toolPath = path.join(_getCacheRoot(), toolName);
+    _validateCacheIdentity(toolName, arch, validationEnabled);
+    const root = _getCacheRoot();
+    let toolPath = path.join(root, toolName);
+    _validateCachePath(root, toolPath, 'toolName', validationEnabled);
 
     if (tl.exist(toolPath)) {
         let children: string[] = tl.ls('', [toolPath]);
         children.forEach((child: string) => {
 
             if (isExplicitVersion(child)) {
-                let fullPath = path.join(toolPath, child, arch);
+                const versionPath = path.join(toolPath, child);
+                _validateCachePath(toolPath, versionPath, 'version', validationEnabled);
+                let fullPath = path.join(versionPath, arch);
+                _validateCachePath(versionPath, fullPath, 'arch', validationEnabled);
                 if (tl.exist(fullPath) && tl.exist(`${fullPath}.complete`)) {
                     versions.push(child);
                 }
@@ -415,9 +648,7 @@ function _getFileSizeOnDisk(filePath: string): number {
 //---------------------
 // Install Functions
 //---------------------
-function _createToolPath(tool: string, version: string, arch?: string): string {
-    // todo: add test for clean
-    let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
+function _createToolPath(folderPath: string): string {
     tl.debug('destination ' + folderPath);
     let markerPath: string = `${folderPath}.complete`;
     tl.rmRF(folderPath);
@@ -426,8 +657,8 @@ function _createToolPath(tool: string, version: string, arch?: string): string {
     return folderPath;
 }
 
-function _completeToolPath(tool: string, version: string, arch?: string): void {
-    let folderPath = path.join(_getCacheRoot(), tool, semver.clean(version), arch);
+function _completeToolPath(tool: string, version: string, arch: string, validationEnabled: boolean): void {
+    let folderPath = _cacheToolPath(tool, version, arch, validationEnabled);
     let markerPath: string = `${folderPath}.complete`;
     tl.writeFile(markerPath, '');
     tl.debug('finished caching tool');
@@ -445,8 +676,17 @@ export async function cacheDir(sourceDir: string,
     tool: string,
     version: string,
     arch?: string): Promise<string> {
-    version = semver.clean(version);
+    return _cacheWrite('cacheDir', enabled => _cacheDir(sourceDir, tool, version, arch, enabled));
+}
+
+async function _cacheDir(sourceDir: string,
+    tool: string,
+    version: string,
+    arch: string | undefined,
+    validationEnabled: boolean): Promise<string> {
     arch = arch || os.arch();
+    _validateCacheIdentity(tool, arch, validationEnabled);
+    version = _cacheVersion(version, validationEnabled);
     console.log(loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source dir: ' + sourceDir);
@@ -455,7 +695,8 @@ export async function cacheDir(sourceDir: string,
     }
 
     // create the tool dir
-    let destPath: string = _createToolPath(tool, version, arch);
+    let destPath: string = _cacheToolPath(tool, version, arch, validationEnabled);
+    _createToolPath(destPath);
 
     // copy each child item. do not move. move can fail on Windows
     // due to anti-virus software having an open handle on a file.
@@ -465,7 +706,7 @@ export async function cacheDir(sourceDir: string,
     }
 
     // write .complete
-    _completeToolPath(tool, version, arch);
+    _completeToolPath(tool, version, arch, validationEnabled);
 
     return destPath;
 }
@@ -485,8 +726,19 @@ export async function cacheFile(sourceFile: string,
     tool: string,
     version: string,
     arch?: string): Promise<string> {
-    version = semver.clean(version);
+    return _cacheWrite('cacheFile', enabled => _cacheFile(sourceFile, targetFile, tool, version, arch, enabled));
+}
+
+async function _cacheFile(sourceFile: string,
+    targetFile: string,
+    tool: string,
+    version: string,
+    arch: string | undefined,
+    validationEnabled: boolean): Promise<string> {
     arch = arch || os.arch();
+    _validateCacheIdentity(tool, arch, validationEnabled);
+    version = _cacheVersion(version, validationEnabled);
+    _validateCacheTarget(targetFile, validationEnabled);
     console.log(loc('TOOL_LIB_CachingTool', tool, version, arch));
 
     tl.debug('source file:' + sourceFile);
@@ -494,17 +746,24 @@ export async function cacheFile(sourceFile: string,
         throw new Error('sourceFile is not a file');
     }
 
-    // create the tool dir
-    let destFolder: string = _createToolPath(tool, version, arch);
-
     // copy instead of move. move can fail on Windows due to
     // anti-virus software having an open handle on a file.
+    let destFolder: string = _cacheToolPath(tool, version, arch, validationEnabled);
+    if (!validationEnabled) {
+        _createToolPath(destFolder);
+    }
     let destPath: string = path.join(destFolder, targetFile);
+    _validateCachePath(destFolder, destPath, 'targetFile', validationEnabled);
+    if (validationEnabled) {
+        // Validate the final file destination before removing an existing cache entry.
+        _createToolPath(destFolder);
+        tl.mkdirP(path.dirname(destPath));
+    }
     tl.debug('destination file' + destPath);
     tl.cp(sourceFile, destPath);
 
     // write .complete
-    _completeToolPath(tool, version, arch);
+    _completeToolPath(tool, version, arch, validationEnabled);
 
     return destFolder;
 }
